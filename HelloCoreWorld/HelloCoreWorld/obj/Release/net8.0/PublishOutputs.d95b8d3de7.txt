@@ -1,0 +1,13 @@
+C:\Hooman\DeployingASPNETCORE\HelloCoreWorld\HelloCoreWorld\obj\Release\net8.0\PubTmp\Out\HelloCoreWorld.exe
+C:\Hooman\DeployingASPNETCORE\HelloCoreWorld\HelloCoreWorld\obj\Release\net8.0\PubTmp\Out\appsettings.Development.json
+C:\Hooman\DeployingASPNETCORE\HelloCoreWorld\HelloCoreWorld\obj\Release\net8.0\PubTmp\Out\appsettings.json
+C:\Hooman\DeployingASPNETCORE\HelloCoreWorld\HelloCoreWorld\obj\Release\net8.0\PubTmp\Out\HelloCoreWorld.dll
+C:\Hooman\DeployingASPNETCORE\HelloCoreWorld\HelloCoreWorld\obj\Release\net8.0\PubTmp\Out\HelloCoreWorld.deps.json
+C:\Hooman\DeployingASPNETCORE\HelloCoreWorld\HelloCoreWorld\obj\Release\net8.0\PubTmp\Out\HelloCoreWorld.runtimeconfig.json
+C:\Hooman\DeployingASPNETCORE\HelloCoreWorld\HelloCoreWorld\obj\Release\net8.0\PubTmp\Out\HelloCoreWorld.pdb
+C:\Hooman\DeployingASPNETCORE\HelloCoreWorld\HelloCoreWorld\obj\Release\net8.0\PubTmp\Out\Microsoft.AspNetCore.Cryptography.Internal.dll
+C:\Hooman\DeployingASPNETCORE\HelloCoreWorld\HelloCoreWorld\obj\Release\net8.0\PubTmp\Out\Microsoft.AspNetCore.DataProtection.dll
+C:\Hooman\DeployingASPNETCORE\HelloCoreWorld\HelloCoreWorld\obj\Release\net8.0\PubTmp\Out\Microsoft.AspNetCore.DataProtection.Abstractions.dll
+C:\Hooman\DeployingASPNETCORE\HelloCoreWorld\HelloCoreWorld\obj\Release\net8.0\PubTmp\Out\Microsoft.Extensions.DependencyInjection.Abstractions.dll
+C:\Hooman\DeployingASPNETCORE\HelloCoreWorld\HelloCoreWorld\obj\Release\net8.0\PubTmp\Out\Microsoft.Extensions.Logging.Abstractions.dll
+C:\Hooman\DeployingASPNETCORE\HelloCoreWorld\HelloCoreWorld\obj\Release\net8.0\PubTmp\Out\Microsoft.Extensions.Options.dll
