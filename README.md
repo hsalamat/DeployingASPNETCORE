@@ -342,8 +342,45 @@ C:\Hooman\DeployingASPNETCORE\HelloCoreWorld\HelloCoreWorld\bin\Release\net8.0\p
 ## Understand Web.config
 1. Notice there is a web.config file in the publish directory
 2. ASP.NET core doesn't use Web.config! It uses a new configuration model based on appsettings.json.
-3. But... IIS still needs this web.config evenif ASP.NET Core isn't using it.
+3. But... IIS still needs this web.config even if ASP.NET Core isn't using it.
 4. Web.config is used to configure ASP.NET Core module that IIS uses to act as a reverse proxy to Kestrel.
 5. When you run dotnet publish, Web.Config is generated for you automatically. You shouldn't touch it or modify it yourself.
 6. Web.config should be in the root for IIS to properly host your ASP.NET Core application.
 7. Web.config prevents IIS from accidently serving the content from the project directory, which could contain sensitive configuration files!
+
+# 4. Deploying to Azure
+
+## Get Started With Azure
+1. Microsoft provides plugins for visual studio that makes it easy to deploy your application.
+2. Sign up for free/student Azure account: [portal.azure.com](https://portal.azure.com/#home)
+3. Open Visual Studio Installer and validate that the workloads Azure development and ASP.NET and web development are installed. https://learn.microsoft.com/en-us/dotnet/azure/configure-visual-studio
+
+## Deploy to Azure With Visual Studio
+1. Azure app service is a managed hosting service for your application, which means you don't have to worry about setting up virtual machines or servers.
+2. You deploy your ASP.NET Core application directly to Azure App Service.
+3. We need to set up an Azure App Service Deployment Profile.
+4. Righ click on the project, select "publish", and create a new "Azure" profile.
+5. Select "Azure App Service (Windows)
+6. Enter your Azure credentials
+7. Once you log in, you need to create a resource group for your ASP.NET CORE application. A resource group is kind of a high level container for resources you provision for the application in Azure, such as the App Service Instance, databases, and so on.
+8. Click on "Create new" to create a new windows App Service.
+9. Update the app or resource group names to match your app (for testing you can leave it as it is). For Hosting Plan, click on "new" and change the size to "Free" if you do not want to pay!
+10. When I click "Create", these resources will be provisioned in Azure, which can take a few seconds. Then Click "Finish" to create the profile. Now it's ready to publish. 
+11. click publish! Visual Studio is going to compile your application and upload it directly into Azure into that new App Service instance we just created.
+12. The URL name is in the format of appname.azurewebsites.net. Once it spins up, you'll see your application running on Azure.
+https://hoomanator.azurewebsites.net
+
+## Continous deployment with Azure
+1. We showed you how to publish and deploy your application using Visual Studio. Now we see how to set up a continuous deployment from a source control repository.
+2. First we need to log in to Azure portal. https://portal.azure.com/#home
+3. Click on App Services, and click on the app service instance that we just created
+4. Under Deployment, select "Deployment Center", select Github (or whatever source control you are using). Click on "Authorize".
+5. Choose the project from the repositories that you want to deploy from.
+6. Choose the branch and save.
+7. Switch back to visual studio, we can make a small change to the index view.
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <b>Automatically deployed!</b>
+</div>
+
+8. A the bottom of the solution explorer, select "Github changes", Stage the Index.cshtml and commit. Sync and push it to the Github remote repository.

@@ -36,3 +36,4 @@ C:\Hooman\DeployingASPNETCORE\HelloCoreWorld\HelloCoreWorld\obj\Release\net8.0\r
 C:\Hooman\DeployingASPNETCORE\HelloCoreWorld\HelloCoreWorld\obj\Release\net8.0\HelloCoreWorld.pdb
 C:\Hooman\DeployingASPNETCORE\HelloCoreWorld\HelloCoreWorld\obj\Release\net8.0\HelloCoreWorld.genruntimeconfig.cache
 C:\Hooman\DeployingASPNETCORE\HelloCoreWorld\HelloCoreWorld\obj\Release\net8.0\ref\HelloCoreWorld.dll
+C:\Hooman\DeployingASPNETCORE\HelloCoreWorld\HelloCoreWorld\obj\Release\net8.0\HelloCoreWorld.sourcelink.json
