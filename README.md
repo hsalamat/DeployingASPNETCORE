@@ -371,16 +371,84 @@ C:\Hooman\DeployingASPNETCORE\HelloCoreWorld\HelloCoreWorld\bin\Release\net8.0\p
 https://hoomanator.azurewebsites.net
 
 ## Continous deployment with Azure
+https://learn.microsoft.com/en-us/azure/app-service/deploy-continuous-deployment?tabs=github%2Cgithubactions
+
+### Prepare your repository
+1. To get automated builds from Azure App Service build server, make sure that your repository root has the correct files in your project.(For ASP.NET Core, you'll need	*.sln or *.csproj)
+
+### Configure the deployment source
 1. We showed you how to publish and deploy your application using Visual Studio. Now we see how to set up a continuous deployment from a source control repository.
-2. First we need to log in to Azure portal. https://portal.azure.com/#home
-3. Click on App Services, and click on the app service instance that we just created
-4. Under Deployment, select "Deployment Center", select Github (or whatever source control you are using). Click on "Authorize".
-5. Choose the project from the repositories that you want to deploy from.
-6. Choose the branch and save.
-7. Switch back to visual studio, we can make a small change to the index view.
+2. In the Azure portal, go to the management page for your App Service app.
+3. In the left pane, select Deployment Center. Then select Settings.
+4. If you're deploying from GitHub for the first time, select Authorize and follow the authorization prompts. If you want to deploy from a different user's repository, select Change Account.
+5. After you authorize your Azure account with GitHub, select the Organization, Repository, and Branch you want.
+6. Under Authentication type, select User-assigned identity for better security. 
+
+### Github Actions
+The GitHub Actions build provider is available only for GitHub deployment. When configured from the app's Deployment Center, it completes these actions to set up CI/CD:
+
+Deposits a GitHub Actions workflow file into your GitHub repository to handle build and deploy tasks to App Service.
+For basic authentication, adds the publish profile for your app as a GitHub secret. The workflow file uses this secret to authenticate with App Service.
+For user-assigned identity, Creates a federated credential between a user-assigned managed identity in Azure and your selected repository and branch in GitHub.
+Creates the secrets AZURE_CLIENT_ID, AZURE_TENANT_ID, and AZURE_SUBSCRIPTION_ID from the federated credential in your selected GitHub repository.
+Assigns the identity to your app.
+In a GitHub Actions workflow in your GitHub repository, you can then use the Azure/login action to authenticate with your app by using OpenID Connect.
+Captures information from the workflow run logs and displays it on the Logs tab in the Deployment Center.
+
+1. We have a workflow YAML file which specifies events, jobs, runners, steps, and actions
+2. An event is a trigger for the workflow.
+3. Common event in a repository when someone pushes new code.
+name: Build and deploy ASP.Net Core app to Azure Web App - Hoomanator
+
+on:
+  push
+
+4. When an event occured, it's going to run all the jobs within the workflow. Here we have a simple job "build" that specify multiple steps and actions. For example, here the first action is to setup a .NET Core. The second action is to build the project. This job runs on "windows-latest" (the Runner!).
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '3.1'
+          include-prerelease: true
+
+      - name: Build with dotnet
+        run: dotnet build --configuration Release
+
+      - name: dotnet publish
+        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
+
+      - name: Upload artifact for deployment job
+        uses: actions/upload-artifact@v3
+        with:
+          name: .net-app
+          path: ${{env.DOTNET_ROOT}}/myapp
+
+5. In your github, the root directory should have a folder .github/workflows where this YAML file (.yml) exist.   
+6. The deault dotnet version is 3-1 which uses old version of Node, which "fails" your build! Update the dotnt-version to 8.0 (or a proper version)
+7. All your actions, gets recorded in the github. You can check them out:
+https://github.com/[your_repository]/[your_app]/actions/ 
+https://github.com/hsalamat/hoomanator/actions/       
+
+
+### Test the deployment
+1. Switch back to visual studio, we can make a small change to the index view.
 <div class="text-center">
     <h1 class="display-4">Welcome</h1>
     <b>Automatically deployed!</b>
 </div>
 
-8. A the bottom of the solution explorer, select "Github changes", Stage the Index.cshtml and commit. Sync and push it to the Github remote repository.
+2. A the bottom of the solution explorer, select "Github changes", Stage the Index.cshtml and commit. Sync and push it to the Github remote repository.
+3. It may take couple of minutes to show up.
+4. Continous deployment is a great way to automate the process of shipping code.
