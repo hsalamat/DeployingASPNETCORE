@@ -66,7 +66,7 @@ Which one to choose?
 ## Project Setup
 1. Create a ASP.NET Core Web APP (Model-View-Controller)
 2. or via visual studio code
-C:\Hooman\DeployingASPNETCORE> dotnet new mvc -o HelloCoreWorldCLI
+C:\Hooman\DeployingASPNETCORE> dotnet new mvc -o HelloCoreWorldDocker
 
 ## Write code for development and production
 1. If you go to project properties > Debug tab, you see that ASPNETCORE_ENVIRONMENT is set to Development. Which means when you run your app from visual studio, this is environment that you are running from.  This has been setup in LaunchSettings.json
@@ -456,5 +456,109 @@ https://github.com/hsalamat/hoomanator/actions/
 # 6. Deploying with Docker
 ## Docker Overview
 Containerization is a new technology that many ASP.NET developers may not yet have a lot of experience with. Docker is the most popular containerization tool today. I'll explain how Docker works at a high level and why it's a good choice for deploying ASP.NET Core applications. When you set up a server or virtual machine to host your application, think of all the stuff that you have to do. Install dependencies like .NET and third-party libraries, configure things like IIS and NGINX, add environment variables and so on. If you have multiple servers, you have to do this setup manually on each one. Because of this, adding and maintaining servers becomes a complex task. With Docker, you instead create an image from your application that includes all of the required dependencies, files, and setup steps. The Docker image contains everything needed to take a machine from a blank slate all the way up to running your application. You can then use this image to create one or more Docker containers. To use a programming metaphor, think of images as classes. A container is a process that runs on the Docker host and is isolated from other running processes on the machine. The container is a live version of the image, so to continue the programming metaphor, think of containers as instances of the classes. The Docker host can run many containers at once, all isolated from each other. This approach has a few benefits. Instead of managing servers or virtual machines that have been carefully set up to run your application, you only need a server that can run Docker. The dependencies and setup steps required to host and run your application are explicitly defined in the Docker image. That means that Docker images become the fundamental unit of deployment. When you build a new version of your application, you create an updated Docker image and push that out to your running Docker containers. Images can be versions tagged and swapped in and out of containers easily, so adding more servers just means spinning up more containers from the same image. All of this means that using Docker makes deploying and managing your application servers much easier. The .NET Core team at Microsoft has created a set of base images that make it straightforward to deploy your ASP.NET Core applications using Docker.
+## Create a Docker image
+1. The first step to creating Docker images is installing Docker on your development machine. The official Docker website https://hub.docker.com has instructions for Windows, Mac, and Linux.  
+2. Docker registries are used to host and distribute Docker Images. Docker Hub is Docker's official cloud-based registry. To get started with Docker Hub you can pull (download) an image or push (upload) one of your local images.
+3. Docker Desktop is a one-click-install tool focused on developers writing applications for containers and micro-services. It provides a nice, friendly GUI and CLI to manage your container images and containers running locally.
+4.  Go to https://hub.docker.com, and install Docker Desktop Installer.
+5. When you finish installing Docker and restart your machine, you can open up PowerShell and run docker --version to make sure Docker is installed and running. 
+6. The next thing that you need is a Docker file. The Docker file is like a recipe that tells Docker how to build an image for your application. You can create a Docker file from inside Visual Studio by right clicking on your project and choosing add, Docker support. I used Linux option (because I have Linux context) and Docker file
+https://learn.microsoft.com/en-us/visualstudio/containers/container-build?view=vs-2022
 
 
+7. Open Visual Studio 2022 Developer PowerShell v17.9.7
+8. PS C:\Users\USER\source\repos> cd C:\Hooman\DeployingASPNETCORE\HelloCoreWorldDocker
+PS C:\Hooman\DeployingASPNETCORE\HelloCoreWorldDocker> MSBuild HelloCoreWorldDocker.csproj /t:ContainerBuild /p:Configuration=Release
+
+PS C:\Hooman\DeployingASPNETCORE\HelloCoreWorldDocker> docker images
+REPOSITORY             TAG       IMAGE ID       CREATED         SIZE
+hellocoreworlddocker   latest    8f667ccea273   7 minutes ago   225MB
+
+
+Note: So assuming you're running a recent version of docker.exe (v20+):
+Get List all contexts: meaning what is your "container OS"
+PS> docker context ls
+you can change the context:
+PS> docker context use desktop-linux
+
+
+******************************************
+********************************************
+6 option b) this is not working!!!! You can also write this file by hand if you aren't using Visual Studio. 
+Create "Dockerfile" with Notepad. It's important that this file be saved in the root of the project, in the same directory as the csproj or program.cs files.  If you're on Windows, use quotes to save the file with no extension. 
+The docker file will start with 
+
+FROM microsoft/dotnet:8.0-sdk AS build 
+WORKDIR /src
+COPY *.csproj .
+RUN dotnet restore
+
+COPY . .
+RUN dotnet publish -c Release -o /app
+
+FROM microsoft/dotnet:8.0-aspnetcore-runtime AS runtime
+WORKDIR /app
+COPY --from=build /app ./
+ENV ASPNETCORE_URLS http://*:5000
+ENTRY ["dotnet", "HelloCoreWorldDocker.dll"]
+
+
+
+First, this tells Docker that we're starting from the Microsoft .NET Core sdk base image. Then we'll say WORKDIR/src to move into a virtual directory inside of the Docker image. We wanna copy all of our source files into the Docker image temporarily so we can build the application. We'll start with just the csproj file first. Copy anything .csproj into the Docker image, and then we're gonna RUN dotnet restore to pull down any packages that we need to build the application. After that restore step, we'll COPY the rest of the rest of the source files, and then RUN dotnet publish -c Release, and say that output should go into another virtual directory called /app. Splitting up the restore and publish steps in this way allows Docker to optimize how the packages get pulled down when we're doing the NuGet restore. Now that we've built the application, we'll say FROM microsoft/dotnet:8.0-aspnetcore-runtime AS runtime, since we don't need the sdk any longer. Switch into that /app directory, COPY things from the build step into /app, we need to set an environment variable, so we'll say ENV, the environment variable is called ASPNETCORE_URLS, this tells ASP.NET Core what ports and URLS it should bind to. We'll stick with the default configuration of binding to port 5000 by saying http://*:5000. You can also bind to https if you have an https certificate configured in your Docker container by saying, https://*5001, for example, we'll stick with http to keep it simple for now. Then we finally need to say ENTRYPOINT and give the command to start the application, which is "dotnet", "HelloCoreWorld.dll". Save the file. 
+
+8. Switch to PowerShell. From the application directory, I need to say Docker build, give it a tag, we'll say -t hellocoreworlddocker just as a name for the image, and then a period to say that we wanna build this image from the current directory. 
+
+PS C:\Users\USER> cd C:\Hooman\DeployingASPNETCORE\HelloCoreWorldDocker
+PS> docker build -t hellocoreworlddocker .
+
+9. Once the image has been built, it can be run locally on this machine, or on any Docker host.
+PS> docker images
+
+***********************************************************
+***********************************************************
+
+## Test the Docker image locally
+1. Now that we've built an image with Docker build, we can test it on our local machine. 
+2. You can run that from visual studio, by choosing "Container (Dockerfile)" next to green "play" arrow.
+3. Or
+4. hellocoreworlddocker is the name of the image I created before. I can run this image using docker run. 
+
+
+
+I'll use the -it flag to tell Docker to take all of the output from the container and pipe it to this console window. I'll also use the -p flag to map port 808 from inside of the container, which was exposed with the expose command in the Docker file, to port 8080 on this machine, on my local machine. And finally I'll specify the name of the image that I want to spin up. 
+
+PS C:\Hooman\DeployingASPNETCORE\HelloCoreWorldDocker> docker run -it -p 8080:8080 hellocoreworlddocker
+
+When I hit enter, Docker will take this image, create a container from it, and then run the container and show me the output. And it works really fast, so in just that amount of time I have the container spun up, Kestrel started up, and it's listening for requests. If I switch over to a browser and browse to localhost:8080, I should start interacting with that container and getting a response back. As you can see, testing Docker images and containers is really straightforward. Next I'll explore running and monitoring this container as a background process.
+
+Note: You should see 2 images in the docker desktop: one you created by visual studio and one in the command line
+
+## Run and monitor a container
+1. On a real server, you'll wanna run the container, or multiple containers as background processes. If we use Docker run with the -d flag, it'll start the container in the background. We still need -p to map the ports from inside the container to our local machine, and we'll specify the name of the image to start up. 
+
+PS C:\Hooman\DeployingASPNETCORE\HelloCoreWorldDocker> docker run -d -p 8080:8080 hellocoreworlddocker
+
+2 We can use Docker ps to monitor the status of this running container. 
+
+PS C:\Hooman\DeployingASPNETCORE\HelloCoreWorldDocker> docker ps
+CONTAINER ID   IMAGE                      COMMAND                  CREATED          STATUS          PORTS
+                               NAMES
+5ab544174817   hellocoreworlddocker       "dotnet HelloCoreWor…"   39 seconds ago   Up 38 seconds   0.0.0.0:8080->8080/tcp, 8081/tcp                   focused_golick
+a41c4b7c7604   hellocoreworlddocker:dev   "tail -f /dev/null"      23 minutes ago   Up 23 minutes   0.0.0.0:32769->8080/tcp, 0.0.0.0:32768->8081/tcp   HelloCoreWorldDocker
+
+3. The output of Docker ps is usually too wide for a single window, so I like to use the --format command to make it a little bit easier to read. I prefer using table .names .image .status, and. ports, this just customizes what output Docker ps will send to the screen. So that's a little bit more readable. This tells us that this image, HelloCoreWorldDocker was spun up into the container called focused_golick, it's been up for about 3 minutes, and it has internal port 8080 mapped to external port 8080. The dev one is created by visual studio!!!
+
+PS C:\Hooman\DeployingASPNETCORE\HelloCoreWorldDocker> docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}'
+NAMES                  IMAGE                      STATUS          PORTS
+focused_golick         hellocoreworlddocker       Up 3 minutes    0.0.0.0:8080->8080/tcp, 8081/tcp
+HelloCoreWorldDocker   hellocoreworlddocker:dev   Up 26 minutes   0.0.0.0:32769->8080/tcp, 0.0.0.0:32768->8081/tcp
+
+4. We can use Docker ps to monitor the status of this container, or we can use Docker stop, followed by the generated container name, focused_golick in this case, to shut the container down. 
+
+PS C:\Hooman\DeployingASPNETCORE\HelloCoreWorldDocker> docker stop focused_golick
+focused_golick
+
+Next we'll explore using NGINX to expose our application to the internet.
+
+## Docker Compose overview
+We now have Kestrel running in a Docker container but it's not accepting traffic on port 80 (we are using 8080 or maybe 5000!). As I mentioned earlier, the best practice is to put a reverse proxy in front of Kestrel. We can use Docker to create another container running NGINX that will proxy requests to our Kestrel container. And you might be wondering, why would we use a Linux server like NGINX if I'm developing this on Windows? The reason is that under the hood Docker runs these containers on top of a small Linux Kernel, even on Windows. When I spin up a container for my Kestrel image, which is based on the dot net core base image, it's actually starting up a small Debian Linux environment. Docker includes a tool called Docker Compose that helps you create multi container applications. We'll use it to create a simple container that runs NGINX, pair that with our existing Kestrel container, and then configure NGINX to proxy requests to Kestrel.
