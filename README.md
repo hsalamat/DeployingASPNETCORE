@@ -558,6 +558,9 @@ HelloCoreWorldDocker   hellocoreworlddocker:dev   Up 26 minutes   0.0.0.0:32769-
 PS C:\Hooman\DeployingASPNETCORE\HelloCoreWorldDocker> docker stop focused_golick
 focused_golick
 
+Remove the visual studio image
+C:\Hooman\DeployingASPNETCORE>docker rmi --force fae80b320b3a
+
 Next we'll explore using NGINX to expose our application to the internet.
 
 ## Docker Compose overview
