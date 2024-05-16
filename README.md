@@ -565,3 +565,86 @@ Next we'll explore using NGINX to expose our application to the internet.
 
 ## Docker Compose overview
 We now have Kestrel running in a Docker container but it's not accepting traffic on port 80 (we are using 8080 or maybe 5000!). As I mentioned earlier, the best practice is to put a reverse proxy in front of Kestrel. We can use Docker to create another container running NGINX that will proxy requests to our Kestrel container. And you might be wondering, why would we use a Linux server like NGINX if I'm developing this on Windows? The reason is that under the hood Docker runs these containers on top of a small Linux Kernel, even on Windows. When I spin up a container for my Kestrel image, which is based on the dot net core base image, it's actually starting up a small Debian Linux environment. Docker includes a tool called Docker Compose that helps you create multi container applications. We'll use it to create a simple container that runs NGINX, pair that with our existing Kestrel container, and then configure NGINX to proxy requests to Kestrel.
+
+## Kestrel and NGINX with Compose
+**** this section is not working
+1. First we need to create a Docker file for the new Nginx container we need. To keep things organized, I'll create a folder in my project folder called nginx. 
+2. I'll use Notepad to create the new Docker file and save it in the nginx folder as Dockerfile with no extension. There's already a public base image for Nginx, so we can use FROM nginx to get started really quickly. 
+
+FROM nginx
+
+3. The only thing we need to do is customize the Nginx configuration, so we'll copy our own nginx.conf file into the image. We need to copy it to /etc/nginx/nginx.conf. And that takes care of the docker file. 
+
+COPY nginx.cong /etc/nginx/nginx.conf
+
+4. Now we need to create nginx.conf. Save this also in the nginx folder as nginx.conf with quotes to preserve the extension. This Nginx configuration will be very similar to the configuration we used earlier when we configured Nginx on a Linux machine. This time it includes a few more elements. We need an events group that specifies the maximum number of concurrent worker connections. This means that up to 1024 active connections can be handled by Nginx at once. And we need an http group which will contain a server group. We want, of course, to listen on port 80. We're gonna send those requests to a location that we'll define here. We'll proxy those requests to Kestrel port 5000. We'll come back to this in a moment. I also need to set some boilerplate things, the HTTP version to 1.1, set the upgrade header, set the connection header, set the host header, and set cache bypass to follow the upgrade setting. That takes care of nginx.conf. 
+
+events { worker_connection 1024; }
+http {
+       server
+              { 
+                 listen 80;
+		 location / {
+			  proxy_pass http://kestrel:5000;
+			  proxy_http_version 1.1;
+			  proxy_set_header Connection 'keep-alive';
+			  proxy_set_header HOST $host;
+			  proxy_cache_bypass $http_upgrade;
+	          }
+	       }
+	      	
+}
+
+
+5. Next we'll need a set of instructions for Docker Compose that tells Compose how we wanna structure our multi-container application. Compose looks for a YAML file called docker-compose.yml. I'll create that and save it in the root of my project. 
+
+ 6. This file specifies the containers that we wanna spin up when we run Docker Compose, and in our case we need two. We need one container for Nginx. We'll build this from the Docker file in the current directory slash nginx subdirectory, and we need to link this container to another container that we'll define in a moment called kestrel. This is where that host name comes from. We want to expose port 80 internally from the container and externally to our physical machine. And then for our other container, we'll build it from the Docker file in the root directory. So that's our Kestrel image. And we need to expose port 5000 internally. So in this case, it means that port 5000 will be exposed from our Kestrel container, but only inside of Docker. When we spin up both of these containers together, port 80 will be exposed on our local machine. Port 5000 will not be. It will only be exposed inside of the Docker environment. And that's necessary so that the Nginx container can proxy requests to the Kestrel container. 
+ 
+
+ 
+ 7. Switch over to PowerShell. From my project root directory, I can run docker-compose up, which will read that YAML file, build the images, and then spin up the containers that we need. At the end of the build process, we should have Nginx listening on port 80 proxying those requests over to Kestrel. We can test this in a browser. If I switch over to Chrome and navigate to localhost, notice there's no port there so I'm hitting port 80, and there's my ASP.NET Core application. As we've seen, docker-compose makes it possible to build complex, multi-container applications with Docker.
+
+ PS C:\Hooman\DeployingASPNETCORE\HelloCoreWorldDocker> docker-compose up
+
+ ## Save an image to a file
+1. We've build a number of images using Docker build, but these are all stored locally on our machine. What if we need to transfer this image to another machine to push it to a production server, for example. That's where the Docker save command comes in. 
+
+2. If we run Docker images, we can see all the images that I've stored locally on this machine. To export or save one of these, we can run Docker save -o to specify an output filename, in this case I'll call it hellocore.tar, and specify the image I wanna save out. This command will save a tar ball of the image as a single file on the file system that you can then easily transport to another computer. This command can take a few minutes.
+
+PS C:\Hooman\DeployingASPNETCORE\HelloCoreWorldDocker> docker images
+REPOSITORY             TAG       IMAGE ID       CREATED        SIZE
+hellocoreworlddocker   latest    8f667ccea273   22 hours ago   225MB
+PS C:\Hooman\DeployingASPNETCORE\HelloCoreWorldDocker> docker save -o hellocore.tar hellocoreworlddocker
+
+ 3. When it's done we can see the file on the file system. The opposite of the save command is the load command, I can use Docker load -i and the filename to load that image back into Docker and get it ready for deployment. You can also use Docker hub to share images between machines. I'll show you how to do that next.
+
+ PS C:\Hooman\DeployingASPNETCORE\HelloCoreWorldDocker> docker load -i hellocore.tar
+Loaded image: hellocoreworlddocker:latest
+
+## Publish an image to Docker Hub
+1. Docker Hub is an online repository for sharing Docker images. You can push images that you've built up to Docker Hub, and then pull them down at a later time, or on a different machine. Storing public images on Docker Hub is free, so it's a useful way to share and maintain images that you use. 
+2. To use Docker Hub, sign up for an account at hub.docker.com, then in the terminal, run Docker login and enter your credentials. 
+
+PS C:\Hooman\DeployingASPNETCORE\HelloCoreWorldDocker> docker login
+Authenticating with existing credentials...
+Login Succeeded
+
+3. I've already logged in on this machine. Images you push to Docker Hub must follow a naming scheme, where the name of your Docker Hub repository comes first, followed by a slash, and then the name of the image. Your personal repository name is your username, so I need to rebuild my image to include my username. I'll rebuild my project image by running Docker build -t, and for the name, I'll use my username, hsalamat/ and then the image name, hellocoreworldcore, and a period to build it from the current directory. 
+
+PS C:\Hooman\DeployingASPNETCORE\HelloCoreWorldDocker> docker build -t hsalamat/hellocoreworlddocker .
+
+
+4. Once the image is built, I can push it up to Docker Hub by using Docker push, and then the image name. 
+
+PS C:\Hooman\DeployingASPNETCORE\HelloCoreWorldDocker> docker push hsalamat/hellocoreworlddocker
+
+5. When the process is done, my image will be visible online at hub.docker.com, and to pull that image back down. 
+
+
+6. I can just run Docker pull and the image name. 
+PS C:\Hooman\DeployingASPNETCORE\HelloCoreWorldDocker> docker pull hsalamat/hellocoreworlddocker
+
+7. Since ASP.NET Core runs natively on the Linux environments Docker uses, Docker's a great choice for deploying ASP.NET Core applications.
+
+## Next steps
+If you wanna dive deeper into Docker, I'd recommend the course Learning Docker by Arthur Ulfeldt, and also the course Docker for .NET Developers by Lee Brandt. You can always find up to date information about ASP.NET Core on the official documentation site at docs.asp.net. There are a number of additional tools that you could use to manage and automate your workflow, such as Octopus Deploy for automated deployment, Travis and CI for building code and running tests, and Jenkins for continuous delivery. These tools build on top of the skills that you've already learned in this course. I recommend doing some research to see if these tools could help your deployment process even further. Thanks for watching my course and happy deploying.
