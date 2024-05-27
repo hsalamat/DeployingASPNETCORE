@@ -85,7 +85,7 @@ C:\Hooman\DeployingASPNETCORE> dotnet new mvc -o HelloCoreWorldDocker
 
 ## Project file settings
 1. Right Click on your project file and select Edit.
-2. csproj include dependecies, framwork
+2. csproj include dependecies, framework
 3. You can include/exclude files. For example, if you have a static file that is outside wwwroot folder, it won't get automatically included in the published output. So you add me as if they are in the wwwroot.
 
  <ItemGroup>

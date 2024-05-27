@@ -587,16 +587,14 @@ All the examples shown so far try to handle an incoming request and generate a r
 
 In listing 4.3, I included DeveloperExceptionPageMiddleware at the start of the application’s middleware pipeline, but it didn’t seem to do anything. Error-handling middleware characteristically ignores the incoming request as it arrives in the pipeline; instead, it inspects the outgoing response, modifying it only when an error has occurred. In the next section, I discuss the types of error-handling middleware that are available to use with your application and when to use them.
 
-4.3 Handling errors using middleware
+## 4.3 Handling errors using middleware
 Errors are a fact of life when you’re developing applications. Even if you write perfect code, as soon as you release and deploy your application, users will find a way to break it, by accident or intentionally! The important thing is that your application handles these errors gracefully, providing a suitable response to the user and not causing your whole application to fail.
 
 The design philosophy for ASP.NET Core is that every feature is opt-in. So because error handling is a feature, you need to enable it explicitly in your application. Many types of errors could occur in your application, and you have many ways to handle them, but in this section I focus on a single type of error: exceptions.
 
 Exceptions typically occur whenever you find an unexpected circumstance. A typical (and highly frustrating) exception you’ll no doubt have experienced before is NullReferenceException, which is thrown when you attempt to access a variable that hasn’t been initialized.3 If an exception occurs in a middleware component, it propagates up the pipeline, as shown in figure 4.14. If the pipeline doesn’t handle the exception, the web server returns a 500 status code to the user.
 
-
-
-Figure 4.14 An exception in the endpoint middleware propagates through the pipeline. If the exception isn’t caught by middleware earlier in the pipeline, a 500 “Server error” status code is sent to the user’s browser.
+![Figure 4.14](/ASPNETCORE8Tutorial/images/Figure4_14.png?raw=true "Figure 4.14 An exception in the endpoint middleware propagates through the pipeline. If the exception isn’t caught by middleware earlier in the pipeline, a 500 “Server error” status code is sent to the user’s browser.")
 
 In some situations, an error won’t cause an exception. Instead, middleware might generate an error status code. One such case occurs when a requested path isn’t handled. In that situation, the pipeline returns a 404 error.
 
@@ -606,32 +604,29 @@ Error-handling middleware attempts to address these problems by modifying the re
 
 The remainder of this section looks at the two main types of exception-handling middleware that’s available for use in your application. Both are available as part of the base ASP.NET Core framework, so you don’t need to reference any additional NuGet packages to use them.
 
-4.3.1 Viewing exceptions in development: DeveloperExceptionPage
+#### 4.3.1 Viewing exceptions in development: DeveloperExceptionPage
 When you’re developing an application, you typically want access to as much information as possible when an error occurs somewhere in your app. For that reason, Microsoft provides DeveloperExceptionPageMiddleware, which you can add to your middleware pipeline by using
-
+```
 app.UseDeveloperExceptionPage();
-NOTE As shown previously, WebApplication automatically adds this middleware to your middleware pipeline when you’re running in the Development environment, so you don’t need to add it explicitly. You’ll learn more about environments in chapter 10.
+```
+__NOTE__ As shown previously, WebApplication automatically adds this middleware to your middleware pipeline when you’re running in the Development environment, so you don’t need to add it explicitly. You’ll learn more about environments in chapter 10.
 
 When an exception is thrown and propagates up the pipeline to this middleware, it’s captured. Then the middleware generates a friendly HTML page, which it returns with a 500 status code, as shown in figure 4.15. This page contains a variety of details about the request and the exception, including the exception stack trace; the source code at the line the exception occurred; and details on the request, such as any cookies or headers that were sent.
 
-
-
-Figure 4.15 The developer exception page shows details about the exception when it occurs during the process of a request. The location in the code that caused the exception, the source code line itself, and the stack trace are all shown by default. You can also click the Query, Cookies, Headers, and Routing buttons to reveal further details about the request that caused the exception.
+![Figure 4.15](/ASPNETCORE8Tutorial/images/Figure4_15.png?raw=true "Figure 4.15 The developer exception page shows details about the exception when it occurs during the process of a request. The location in the code that caused the exception, the source code line itself, and the stack trace are all shown by default. You can also click the Query, Cookies, Headers, and Routing buttons to reveal further details about the request that caused the exception.")
 
 Having these details available when an error occurs is invaluable for debugging a problem, but they also represent a security risk if used incorrectly. You should never return more details about your application to users than absolutely necessary, so you should use DeveloperExceptionPage only when developing your application. The clue is in the name!
 
-WARNING Never use the developer exception page when running in production. Doing so is a security risk, as it could publicly reveal details about your application’s code, making you an easy target for attackers. WebApplication uses the correct behavior by default and adds the middleware only when running in development.
+__WARNING__ Never use the developer exception page when running in production. Doing so is a security risk, as it could publicly reveal details about your application’s code, making you an easy target for attackers. WebApplication uses the correct behavior by default and adds the middleware only when running in development.
 
 If the developer exception page isn’t appropriate for production use, what should you use instead? Luckily, you can use another type of general-purpose error-handling middleware in production: ExceptionHandlerMiddleware.
 
-4.3.2 Handling exceptions in production: ExceptionHandlerMiddleware
+### 4.3.2 Handling exceptions in production: ExceptionHandlerMiddleware
 The developer exception page is handy when you’re developing your applications, but you shouldn’t use it in production, as it can leak information about your app to potential attackers. You still want to catch errors, though; otherwise, users will see unfriendly error pages or blank pages, depending on the browser they’re using.
 
 You can solve this problem by using ExceptionHandlerMiddleware. If an error occurs in your application, the user will see a custom error response that’s consistent with the rest of the application but provides only necessary details about the error. For a minimal API application, that response could be JSON or plain text, as shown in figure 4.16.
 
-
-
-Figure 4.16 Using the ExceptionHandlerMiddleware, you can return a generic error message when an exception occurs, ensuring that you don’t leak any sensitive details about your application in production.
+![Figure 4.16](/ASPNETCORE8Tutorial/images/Figure4_16.png?raw=true "Figure 4.16 Using the ExceptionHandlerMiddleware, you can return a generic error message when an exception occurs, ensuring that you don’t leak any sensitive details about your application in production."
 
 For Razor Pages apps, you can create a custom error response, such as the one shown in figure 4.17. You maintain the look and feel of the application by using the same header, displaying the currently logged-in user, and displaying an appropriate message to the user instead of full details on the exception.
 

@@ -1,13 +1,19 @@
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
-app.UseWelcomePage();
-app.UseDeveloperExceptionPage();         
-app.UseStaticFiles();                    
-app.UseRouting();                        
- 
-app.MapGet("/", () => "Hello World!");
+// In development, this is already added by WebApplication
+// Note: You should NEVER do this in Production as it can leak secrets
+app.UseDeveloperExceptionPage();
+app.MapGet("/", () => BadService.GetValues());
 
 app.Run();
+
+class BadService
+{
+    public static string? GetValues()
+    {
+        throw new Exception("Oops, something bad happened!");
+    }
+}
 
 
