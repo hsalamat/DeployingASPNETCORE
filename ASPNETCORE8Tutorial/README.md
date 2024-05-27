@@ -431,7 +431,7 @@ __TIP__ Remember that you can view the application code for this book in the Git
 
 When the application receives a request, the ASP.NET Core web server handles it and passes it to the middleware pipeline. StaticFileMiddleware receives the request and determines whether it can handle it. If the requested file exists, the middleware handles the request and returns the file as the response, as shown in figure 4.9.
 
-![Figure 4.8](/ASPNETCORE8Tutorial/images/Figure4_8.png?raw=true "Figure 4.9 StaticFileMiddleware handles a request for a file. The middleware checks the wwwroot folder to see if whether requested moon.jpg file exists. The file exists, so the middleware retrieves it and returns it as the response to the web server and, ultimately, to the browser.")
+![Figure 4.9](/ASPNETCORE8Tutorial/images/Figure4_9.png?raw=true "Figure 4.9 StaticFileMiddleware handles a request for a file. The middleware checks the wwwroot folder to see if whether requested moon.jpg file exists. The file exists, so the middleware retrieves it and returns it as the response to the web server and, ultimately, to the browser.")
 
 If the file doesn’t exist, the request effectively passes through the static-file middleware unchanged. But wait—you added only one piece of middleware, right? Surely you can’t pass the request through to the next middleware component if there isn’t another one.
 
@@ -461,19 +461,18 @@ Error codes are in the 4xx and 5xx classes. Common codes include a 404 response 
 
 This basic ASP.NET Core application makes it easy to see the behavior of the ASP.NET Core middleware pipeline and the static-file middleware in particular, but it’s unlikely that your applications will be this simple. It’s more likely that static files will form one part of your middleware pipeline. In the next section you’ll see how to combine multiple middleware components as we look at a simple minimal API application.
 
-## 4.2.3 Simple pipeline scenario 3: A minimal API application
+### 4.2.3 Simple pipeline scenario 3: A minimal API application
 By this point, you should have a decent grasp of the middleware pipeline, insofar as you understand that it defines your application’s behavior. In this section you’ll see how to combine several standard middleware components to form a pipeline. As before, you do this in Program.cs by adding middleware to the WebApplication object.
 
 You’ll begin by creating a basic middleware pipeline that you’d find in a typical ASP.NET Core minimal APIs template and then extend it by adding middleware. Figure 4.10 shows the output you see when you navigate to the home page of the application—identical to the sample application in chapter 3.
 
-
-
-Figure 4.10 A simple minimal API application. The application uses only four pieces of middleware: routing middleware to choose the endpoint to run, endpoint middleware to generate the response from a Razor Page, static-file middleware to serve image files, and exception-handler middleware to capture any errors.
+![Figure 4.10](/ASPNETCORE8Tutorial/images/Figure4_10.png?raw=true "Figure 4.10 A simple minimal API application. The application uses only four pieces of middleware: routing middleware to choose the endpoint to run, endpoint middleware to generate the response from a Razor Page, static-file middleware to serve image files, and exception-handler middleware to capture any errors.")
 
 Creating this application requires only four pieces of middleware: routing middleware to choose a minimal API endpoint to execute, endpoint middleware to generate the response, static-file middleware to serve any image files from the wwwroot folder, and exception-handler middleware to handle any errors that might occur. Even though this example is still a Hello World! example, this architecture is much closer to a realistic example. The following listing shows an example of such an application.
 
 Listing 4.3 A basic middleware pipeline for a minimal APIs application
 
+```
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 WebApplication app = builder.Build();
  
@@ -484,6 +483,8 @@ app.UseRouting();                        ❸
 app.MapGet("/", () => "Hello World!");   ❹
  
 app.Run();
+```
+
 ❶ This call isn’t strictly necessary, as it’s already added by WebApplication by default.
 
 ❷ Adds the StaticFileMiddleware to the pipeline
@@ -506,11 +507,11 @@ First, all the methods for adding middleware start with Use. As I mentioned earl
 
 Second, it’s important to understand that the MapGet method does not add middleware to the pipeline; it defines an endpoint in your application. These endpoints are used by the routing and endpoint middleware. You’ll learn more about endpoints and routing in chapter 5.
 
-TIP You can define the endpoints for your app by using MapGet() anywhere in Program.cs before the call to app.Run(), but the calls are typically placed after the middleware pipeline definition.
+__TIP__ You can define the endpoints for your app by using MapGet() anywhere in Program.cs before the call to app.Run(), but the calls are typically placed after the middleware pipeline definition.
 
 In chapter 3, I mentioned that WebApplication automatically adds middleware to your app. You can see this process in action in listing 4.3 automatically adding the EndpointMiddleware to the end of the middleware pipeline. WebApplication also automatically adds the developer exception page middleware to the start of the middleware pipeline when you’re running in development. As a result, you can omit the call to UseDeveloperExceptionPage() from listing 4.3, and your middleware pipeline will be essentially the same.
 
-WebApplication and autoadded middleware
+### WebApplication and autoadded middleware
 
 WebApplication and WebApplicationBuilder were introduced in .NET 6 to try to reduce the amount of boilerplate code required for a Hello World! ASP.NET Core application. As part of this initiative, Microsoft chose to have WebApplication automatically add various middleware to the pipeline. This decision alleviates some of the common getting-started pain points of middleware ordering by ensuring that, for example, UseRouting() is always called before UseAuthorization().
 
@@ -520,7 +521,7 @@ Luckily, you don’t need to worry about the middleware that WebApplication adds
 
 Nevertheless, in some cases it may pay to know exactly what’s in your pipeline, especially if you’re familiar with ASP.NET Core. In .NET 7, WebApplication automatically adds some or all of the following middleware to the start of the middleware pipeline:
 
-HostFilteringMiddleware—This middleware is security-related. You can read more about why it’s useful and how to configure it at http://mng.bz/zXxa.
+HostFilteringMiddleware—This middleware is security-related. You can read more about why it’s useful and how to configure it at https://andrewlock.net/adding-host-filtering-to-kestrel-in-aspnetcore/.
 
 ForwardedHeadersMiddleware—This middleware controls how forwarded headers are handled. You can read more about it in chapter 27.
 
@@ -538,9 +539,7 @@ Depending on your Program.cs configuration, WebApplication may not add all this 
 
 Another important point about listing 4.3 is that the order in which you add the middleware to the WebApplication object is the order in which the middleware is added to the pipeline. The order of the calls in listing 4.3 creates a pipeline similar to that shown in figure 4.11.
 
-
-
-Figure 4.11 The middleware pipeline for the example application in listing 4.3. The order in which you add the middleware to WebApplication defines the order of the middleware in the pipeline.
+![Figure 4.11](/ASPNETCORE8Tutorial/images/Figure4_11.png?raw=true "Figure 4.11 The middleware pipeline for the example application in listing 4.3. The order in which you add the middleware to WebApplication defines the order of the middleware in the pipeline.")
 
 The ASP.NET Core web server passes the incoming request to the developer exception page middleware first. This exception-handler middleware ignores the request initially; its purpose is to catch any exceptions thrown by later middleware in the pipeline, as you’ll see in section 4.3. It’s important for this middleware to be placed early in the pipeline so that it can catch errors produced by later middleware.
 
@@ -550,18 +549,16 @@ In chapter 3, I mentioned that WebApplication adds the RoutingMiddleware to the 
 
 The answer, again, is related to the order of the middleware. Adding an explicit call to UseRouting() tells WebApplication not to add the RoutingMiddleware automatically before the middleware defined in Program.cs. This allows us to “move” the RoutingMiddleware to be placed after the StaticFileMiddleware. Although this step isn’t strictly necessary in this case, it’s good practice. The StaticFileMiddleware doesn’t use routing, so it’s preferable to let this middleware check whether the incoming request is for a static file; if so, it can short-circuit the pipeline and avoid the unnecessary call to the RoutingMiddleware.
 
-NOTE In versions 1.x and 2.x of ASP.NET Core, the routing and endpoint middleware were combined in a single Model-View-Controller (MVC) middleware component. Splitting the responsibilities for routing from execution makes it possible to insert middleware between the routing and endpoint middleware. I discuss routing further in chapters 6 and 14.
+__NOTE__ In versions 1.x and 2.x of ASP.NET Core, the routing and endpoint middleware were combined in a single Model-View-Controller (MVC) middleware component. Splitting the responsibilities for routing from execution makes it possible to insert middleware between the routing and endpoint middleware. I discuss routing further in chapters 6 and 14.
 
 The impact of ordering is most obvious when you have two pieces of middleware that are listening for the same path. The endpoint middleware in the example pipeline currently responds to a request to the home page of the application (with the / path) by returning the string "Hello World!", as shown in figure 4.10. Figure 4.12 shows what happens if you reintroduce a piece of middleware that you saw previously, WelcomePageMiddleware, and configure it to respond to the / path as well.
 
-
-
-Figure 4.12 The Welcome-page middleware response. The Welcome-page middleware comes before the endpoint middleware, so a request to the home page returns the Welcome-page middleware instead of the minimal API response.
+![Figure 4.12](/ASPNETCORE8Tutorial/images/Figure4_12.png?raw=true "Figure 4.12 The Welcome-page middleware response. The Welcome-page middleware comes before the endpoint middleware, so a request to the home page returns the Welcome-page middleware instead of the minimal API response.")
 
 As you saw in section 4.2.1, WelcomePageMiddleware is designed to return a fixed HTML response, so you wouldn’t use it in a production app, but it illustrates the point nicely. In the following listing, it’s added to the start of the middleware pipeline and configured to respond only to the "/" path.
 
 Listing 4.4 Adding WelcomePageMiddleware to the pipeline
-
+```
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 WebApplication app = builder.Build();
  
@@ -573,19 +570,18 @@ app.UseRouting();                         ❷
 app.MapGet("/", () => "Hello World!");    ❷
  
 app.Run();
+```
 ❶ WelcomePageMiddleware handles all requests to the “/” path and returns a sample HTML response.
 
 ❷ Requests to “/” will never reach the endpoint middleware, so this endpoint won’t be called.
 
 Even though you know that the endpoint middleware can also handle the "/" path, WelcomePageMiddleware is earlier in the pipeline, so it returns a response when it receives the request to "/", short-circuiting the pipeline, as shown in figure 4.13. None of the other middleware in the pipeline runs for the request, so none has an opportunity to generate a response.
 
-
-
-Figure 4.13 Overview of the application handling a request to the "/" path. The Welcome-page middleware is first in the middleware pipeline, so it receives the request before any other middleware. It generates an HTML response, short-circuiting the pipeline. No other middleware runs for the request.
+![Figure 4.13](/ASPNETCORE8Tutorial/images/Figure4_13.png?raw=true "Figure 4.13 Overview of the application handling a request to the "/" path. The Welcome-page middleware is first in the middleware pipeline, so it receives the request before any other middleware. It generates an HTML response, short-circuiting the pipeline. No other middleware runs for the request.")
 
 As WebApplication automatically adds EndpointMiddleware to the end of the middleware pipeline, the WelcomePageMiddleware will always be ahead of it, so it always generates a response before the endpoint can execute in this example.
 
-TIP You should always consider the order of middleware when adding it to WebApplication. Middleware added earlier in the pipeline will run (and potentially return a response) before middleware added later.
+__TIP__ You should always consider the order of middleware when adding it to WebApplication. Middleware added earlier in the pipeline will run (and potentially return a response) before middleware added later.
 
 All the examples shown so far try to handle an incoming request and generate a response, but it’s important to remember that the middleware pipeline is bidirectional. Each middleware component gets an opportunity to handle both the incoming request and the outgoing response. The order of middleware is most important for those components that create or modify the outgoing response.
 
