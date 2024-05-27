@@ -306,7 +306,7 @@ Requests are passed to the middleware pipeline as HttpContext objects. As you sa
 
 You can also think of your middleware pipeline as being a series of concentric components, similar to a traditional matryoshka (Russian) doll, as shown in figure 4.3. A request progresses through the pipeline by heading deeper into the stack of middleware until a response is returned. Then the response returns through the middleware, passing through the components in reverse order from the request.
 
-![Figure 4.3](/images/Figure4_3.png?raw=true "Figure 4.3")
+![Figure 4.3](/ASPNETCORE8Tutorial/images/Figure4_3.png?raw=true "Figure 4.3")
 
 Figure 4.3 You can also think of middleware as being a series of nested components; a request is sent deeper into the middleware, and the response resurfaces from it. Each middleware component can execute logic before passing the response on to the next middleware component and can execute logic after the response has been created, on the way back out of the stack.
 
@@ -342,7 +342,7 @@ __NOTE__ I discuss building custom middleware in chapter 31.
 
 In this section, you’ll see how to create one of the simplest middleware pipelines, consisting only of WelcomePageMiddleware. WelcomePageMiddleware is designed to provide a sample HTML page quickly when you’re first developing an application, as you can see in figure 4.4. You wouldn’t use it in a production app, as you can’t customize the output, but it’s a single, self-contained middleware component you can use to ensure that your application is running correctly.
 
-![Figure 4.4](/images/Figure4_5.png?raw=true "Figure 4.4")
+![Figure 4.4](/ASPNETCORE8Tutorial/images/Figure4_5.png?raw=true "Figure 4.4")
 
 Figure 4.4 The Welcome-page middleware response. Every request to the application, at any path, will return the same Welcome-page response.
 
@@ -350,7 +350,7 @@ __TIP__ WelcomePageMiddleware is included as part of the base ASP.NET Core frame
 
 Even though this application is simple, the same process you’ve seen before occurs when the application receives an HTTP request, as shown in figure 4.5.
 
-![Figure 4.5](/images/Figure4_5.png?raw=true "Figure 4.5")
+![Figure 4.5](/ASPNETCORE8Tutorial/images/Figure4_5.png?raw=true "Figure 4.5")
 
 Figure 4.5 WelcomePageMiddleware handles a request. The request passes from the reverse proxy to the ASP.NET Core web server and finally to the middleware pipeline, which generates an HTML response.
 
@@ -387,7 +387,7 @@ UseMiddleware<WelcomePageMiddleware>();
 
 This convention of creating an extension method for each piece of middleware and starting the method name with Use is designed to improve discoverability when you add middleware to your application.2 ASP.NET Core includes a lot of middleware as part of the core framework, so you can use IntelliSense in Visual Studio and other integrated development environments (IDEs) to view all the middleware that’s available, as shown in figure 4.6.
 
-![Figure 4.6](/images/Figure4_5.png?raw=true "Figure 4.6")
+![Figure 4.6](/ASPNETCORE8Tutorial/images/Figure4_6.png?raw=true "Figure 4.6")
 
 Figure 4.6 IntelliSense makes it easy to view all the available middleware to add to your middleware pipeline.
 
@@ -400,42 +400,38 @@ This application is the most basic kind, returning the same response no matter w
 ### 4.2.2 Simple pipeline scenario 2: Handling static files
 In this section, I’ll show you how to create one of the simplest middleware pipelines you can use for a full application: a static-file application. Most web applications, including those with dynamic content, serve some pages by using static files. Images, JavaScript, and CSS stylesheets are normally saved to disk during development and are served up when requested from the special wwwroot folder of your project, normally as part of a full HTML page request.
 
-DEFINITION By default, the wwwroot folder is the only folder in your application that ASP.NET Core will serve files from. It doesn’t serve files from other folders for security reasons. The wwwroot folder in an ASP.NET Core project is typically deployed as is to production, including all the files and folders it contains.
+__DEFINITION__ By default, the wwwroot folder is the only folder in your application that ASP.NET Core will serve files from. It doesn’t serve files from other folders for security reasons. The wwwroot folder in an ASP.NET Core project is typically deployed as is to production, including all the files and folders it contains.
 
 You can use StaticFileMiddleware to serve static files from the wwwroot folder when requested, as shown in figure 4.7. In this example, an image called moon.jpg exists in the wwwroot folder. When you request the file using the /moon.jpg path, it’s loaded and returned as the response to the request.
 
-
-
-Figure 4.7 Serving a static image file using the static-file middleware
+![Figure 4.7](/ASPNETCORE8Tutorial/images/Figure4_7.png?raw=true "Figure 4.7 Serving a static image file using the static-file middleware")
 
 If the user requests a file that doesn’t exist in the wwwroot folder, such as missing.jpg, the static-file middleware won’t serve a file. Instead, a 404 HTTP error code response will be sent to the user’s browser, which displays its default “File Not Found” page, as shown in figure 4.8.
 
-NOTE How this page looks depends on your browser. In some browsers, you may see a blank page.
+__NOTE__ How this page looks depends on your browser. In some browsers, you may see a blank page.
 
-
-
-
-Figure 4.8 Returning a 404 to the browser when a file doesn’t exist. The requested file didn’t exist in the wwwroot folder, so the ASP.NET Core application returned a 404 response. Then the browser (Microsoft Edge, in this case) shows the user a default “File Not Found” error page.
+![Figure 4.8](/ASPNETCORE8Tutorial/images/Figure4_8.png?raw=true "Figure 4.8 Returning a 404 to the browser when a file doesn’t exist. The requested file didn’t exist in the wwwroot folder, so the ASP.NET Core application returned a 404 response. Then the browser (Microsoft Edge, in this case) shows the user a default “File Not Found” error page.")
 
 Building the middleware pipeline for this simple static-file application is easy. The pipeline consists of a single piece of middleware, StaticFileMiddleware, as you can see in the following listing. You don’t need any services, so configuring the middleware pipeline with UseStaticFiles is all that’s required.
 
 Listing 4.2 Program.cs for a static-file middleware pipeline
 
+```
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 WebApplication app = builder.Build();
  
 app.UseStaticFiles();    ❶
  
 app.Run();
+```
+
 ❶ Adds the StaticFileMiddleware to the pipeline
 
-TIP Remember that you can view the application code for this book in the GitHub repository at http://mng.bz/Y1qN.
+__TIP__ Remember that you can view the application code for this book in the GitHub repository.
 
 When the application receives a request, the ASP.NET Core web server handles it and passes it to the middleware pipeline. StaticFileMiddleware receives the request and determines whether it can handle it. If the requested file exists, the middleware handles the request and returns the file as the response, as shown in figure 4.9.
 
-
-
-Figure 4.9 StaticFileMiddleware handles a request for a file. The middleware checks the wwwroot folder to see if whether requested moon.jpg file exists. The file exists, so the middleware retrieves it and returns it as the response to the web server and, ultimately, to the browser.
+![Figure 4.8](/ASPNETCORE8Tutorial/images/Figure4_8.png?raw=true "Figure 4.9 StaticFileMiddleware handles a request for a file. The middleware checks the wwwroot folder to see if whether requested moon.jpg file exists. The file exists, so the middleware retrieves it and returns it as the response to the web server and, ultimately, to the browser.")
 
 If the file doesn’t exist, the request effectively passes through the static-file middleware unchanged. But wait—you added only one piece of middleware, right? Surely you can’t pass the request through to the next middleware component if there isn’t another one.
 
@@ -443,7 +439,7 @@ ASP.NET Core automatically adds a dummy piece of middleware to the end of the pi
 
 TIP If no middleware generates a response for a request, the pipeline automatically returns a simple 404 error response to the browser.
 
-HTTP response status codes
+### HTTP response status codes
 
 Every HTTP response contains a status code and, optionally, a reason phrase describing the status code. Status codes are fundamental to the HTTP protocol and are a standardized way of indicating common results. A 200 response, for example, means that the request was successfully answered, whereas a 404 response indicates that the resource requested couldn’t be found. You can see the full list of standardized status codes at https://www.rfc-editor.org/rfc/rfc9110#name-status-codes.
 
@@ -465,7 +461,7 @@ Error codes are in the 4xx and 5xx classes. Common codes include a 404 response 
 
 This basic ASP.NET Core application makes it easy to see the behavior of the ASP.NET Core middleware pipeline and the static-file middleware in particular, but it’s unlikely that your applications will be this simple. It’s more likely that static files will form one part of your middleware pipeline. In the next section you’ll see how to combine multiple middleware components as we look at a simple minimal API application.
 
-4.2.3 Simple pipeline scenario 3: A minimal API application
+## 4.2.3 Simple pipeline scenario 3: A minimal API application
 By this point, you should have a decent grasp of the middleware pipeline, insofar as you understand that it defines your application’s behavior. In this section you’ll see how to combine several standard middleware components to form a pipeline. As before, you do this in Program.cs by adding middleware to the WebApplication object.
 
 You’ll begin by creating a basic middleware pipeline that you’d find in a typical ASP.NET Core minimal APIs template and then extend it by adding middleware. Figure 4.10 shows the output you see when you navigate to the home page of the application—identical to the sample application in chapter 3.
