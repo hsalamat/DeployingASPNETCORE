@@ -607,7 +607,23 @@ The remainder of this section looks at the two main types of exception-handling 
 #### 4.3.1 Viewing exceptions in development: DeveloperExceptionPage
 When you’re developing an application, you typically want access to as much information as possible when an error occurs somewhere in your app. For that reason, Microsoft provides DeveloperExceptionPageMiddleware, which you can add to your middleware pipeline by using
 ```
+var builder = WebApplication.CreateBuilder(args);
+var app = builder.Build();
+
+// In development, this is already added by WebApplication
+// Note: You should NEVER do this in Production as it can leak secrets
 app.UseDeveloperExceptionPage();
+app.MapGet("/", () => BadService.GetValues());
+
+app.Run();
+
+class BadService
+{
+    public static string? GetValues()
+    {
+        throw new Exception("Oops, something bad happened!");
+    }
+}
 ```
 __NOTE__ As shown previously, WebApplication automatically adds this middleware to your middleware pipeline when you’re running in the Development environment, so you don’t need to add it explicitly. You’ll learn more about environments in chapter 10.
 
@@ -626,28 +642,44 @@ The developer exception page is handy when you’re developing your applications
 
 You can solve this problem by using ExceptionHandlerMiddleware. If an error occurs in your application, the user will see a custom error response that’s consistent with the rest of the application but provides only necessary details about the error. For a minimal API application, that response could be JSON or plain text, as shown in figure 4.16.
 
-![Figure 4.16](/ASPNETCORE8Tutorial/images/Figure4_16.png?raw=true "Figure 4.16 Using the ExceptionHandlerMiddleware, you can return a generic error message when an exception occurs, ensuring that you don’t leak any sensitive details about your application in production."
+![Figure 4.16](/ASPNETCORE8Tutorial/images/Figure4_16.png?raw=true "Figure 4.16 Using the ExceptionHandlerMiddleware, you can return a generic error message when an exception occurs, ensuring that you don’t leak any sensitive details about your application in production.")
 
 For Razor Pages apps, you can create a custom error response, such as the one shown in figure 4.17. You maintain the look and feel of the application by using the same header, displaying the currently logged-in user, and displaying an appropriate message to the user instead of full details on the exception.
 
-
-
-Figure 4.17 A custom error page created by ExceptionHandlerMiddleware. The custom error page can have the same look and feel as the rest of the application by reusing elements such as the header and footer. More important, you can easily control the error details displayed to users.
+![Figure 4.17](/ASPNETCORE8Tutorial/images/Figure4_17.png?raw=true "Figure 4.17 A custom error page created by ExceptionHandlerMiddleware. The custom error page can have the same look and feel as the rest of the application by reusing elements such as the header and footer. More important, you can easily control the error details displayed to users.")
 
 Given the differing requirements for error handlers in development and production, most ASP.NET Core apps add their error-handler middleware conditionally, based on the hosting environment. WebApplication automatically adds the developer exception page when running in the development hosting environment, so you typically add ExceptionHandlerMiddleware when you’re not in the development environment, as shown in the following listing.
 
 Listing 4.5 Adding exception-handler middleware when in production
 
-WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
-WebApplication app = builder.Build();                                ❶
- 
-if (!app.Environment.IsDevelopment())                                ❷
+var builder = WebApplication.CreateBuilder(args);
+var app = builder.Build();
+
+app.UseExceptionHandler("/error");
+
+// normally this would only be used in Production, and you'd rely on the DeveloperExceptionPage middleware
+// that's automatically added by WebApplication in Development
+// e.g.:
+if (app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/error");                               ❸
+    app.UseExceptionHandler("/error");
 }
-  
-// additional middleware configuration
-app.MapGet("/error", () => "Sorry, an error occurred");              ❹
+
+app.MapGet("/", () => BadService.GetValues());
+app.MapGet("/error", () => "Sorry, there was a problem processing your request");
+
+app.Run();
+
+class BadService
+{
+    public static string? GetValues()
+    {
+        throw new Exception("Oops, something bad happened!");
+    }
+}
+
+
+
 ❶ In development, WebApplication automatically adds the developer exception page middleware.
 
 ❷ Configures a different pipeline when not running in development
@@ -658,7 +690,7 @@ app.MapGet("/error", () => "Sorry, an error occurred");              ❹
 
 As well as demonstrating how to add ExceptionHandlerMiddleware to your middleware pipeline, this listing shows that it’s perfectly acceptable to configure different middleware pipelines depending on the environment when the application starts. You could also vary your pipeline based on other values, such as settings loaded from configuration.
 
-NOTE You’ll see how to use configuration values to customize the middleware pipeline in chapter 10.
+__NOTE__ You’ll see how to use configuration values to customize the middleware pipeline in chapter 10.
 
 When adding ExceptionHandlerMiddleware to your application, you typically provide a path to the custom error page that will be displayed to the user. In the example in listing 4.5, you used an error handling path of "/error":
 
@@ -667,9 +699,7 @@ ExceptionHandlerMiddleware invokes this path after it captures an exception to g
 
 Figure 4.18 shows what happens when ExceptionHandlerMiddleware handles an exception. It shows the flow of events when the minimal API endpoint for the "/" path generates an exception. The final response returns an error status code but also provides an error string, using the "/error" endpoint.
 
-
-
-Figure 4.18 ExceptionHandlerMiddleware handling an exception to generate a JSON response. A request to the / path generates an exception, which is handled by the middleware. The pipeline is reexecuted, using the /error path to generate the JSON response.
+![Figure 4.18](/ASPNETCORE8Tutorial/images/Figure4_18.png?raw=true "Figure 4.18 ExceptionHandlerMiddleware handling an exception to generate a JSON response. A request to the / path generates an exception, which is handled by the middleware. The pipeline is reexecuted, using the /error path to generate the JSON response."
 
 The sequence of events when an unhandled exception occurs somewhere in the middleware pipeline (or in an endpoint) after ExceptionHandlerMiddleware is as follows:
 
@@ -711,7 +741,7 @@ The web server returns a raw 500 error, as though there were no error-handling m
 
 Thanks to this problem, it’s often good practice to make your error-handling pages as simple as possible to reduce the possibility that errors will occur.
 
-WARNING If your error-handling path generates an error, the user will see a generic browser error. It’s often better to use a static error page that always works than a dynamic page that risks throwing more errors. You can see an alternative approach using a custom error handling function in this post: http://mng.bz/0Kmx.
+__WARNING__ If your error-handling path generates an error, the user will see a generic browser error. It’s often better to use a static error page that always works than a dynamic page that risks throwing more errors. You can see an alternative approach using a custom error handling function in this post: http://mng.bz/0Kmx.
 
 Another consideration when building minimal API applications is that you generally don’t want to return HTML. Returning an HTML page to an application that’s expecting JSON could easily break it. Instead, the HTTP 500 status code and a JSON body describing the error are more useful to a consuming application. Luckily, ASP.NET Core allows you to do exactly this when you create minimal APIs and web API controllers.
 
