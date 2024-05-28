@@ -699,7 +699,7 @@ ExceptionHandlerMiddleware invokes this path after it captures an exception to g
 
 Figure 4.18 shows what happens when ExceptionHandlerMiddleware handles an exception. It shows the flow of events when the minimal API endpoint for the "/" path generates an exception. The final response returns an error status code but also provides an error string, using the "/error" endpoint.
 
-![Figure 4.18](/ASPNETCORE8Tutorial/images/Figure4_18.png?raw=true "Figure 4.18 ExceptionHandlerMiddleware handling an exception to generate a JSON response. A request to the / path generates an exception, which is handled by the middleware. The pipeline is reexecuted, using the /error path to generate the JSON response."
+![Figure 4.18](/ASPNETCORE8Tutorial/images/Figure4_18.png?raw=true "Figure 4.18 ExceptionHandlerMiddleware handling an exception to generate a JSON response. A request to the / path generates an exception, which is handled by the middleware. The pipeline is reexecuted, using the /error path to generate the JSON response.")
 
 The sequence of events when an unhandled exception occurs somewhere in the middleware pipeline (or in an endpoint) after ExceptionHandlerMiddleware is as follows:
 
@@ -719,7 +719,7 @@ When the response gets back to ExceptionHandlerMiddleware, it modifies the statu
 
 One of the main advantages of reexecuting the pipeline for Razor Page apps is the ability to have your error messages integrated into your normal site layout, as shown in figure 4.17. It’s certainly possible to return a fixed response when an error occurs without reexecuting the pipeline, but you wouldn’t be able to have a menu bar with dynamically generated links or display the current user’s name in the menu, for example. By reexecuting the pipeline, you ensure that all the dynamic areas of your application are integrated correctly, as though the page were a standard page of your site.
 
-NOTE You don’t need to do anything other than add ExceptionHandlerMiddleware to your application and configure a valid error-handling path to enable reexecuting the pipeline, as shown in figure 4.18. The middleware will catch the exception and reexecute the pipeline for you. Subsequent middleware will treat the reexecution as a new request, but previous middleware in the pipeline won’t be aware that anything unusual happened.
+__NOTE__ You don’t need to do anything other than add ExceptionHandlerMiddleware to your application and configure a valid error-handling path to enable reexecuting the pipeline, as shown in figure 4.18. The middleware will catch the exception and reexecute the pipeline for you. Subsequent middleware will treat the reexecution as a new request, but previous middleware in the pipeline won’t be aware that anything unusual happened.
 
 Reexecuting the middleware pipeline is a great way to keep consistency in your web application for error pages, but you should be aware of some gotchas. First, middleware can modify a response generated farther down the pipeline only if the response hasn’t yet been sent to the client. This situation can be a problem if, for example, an error occurs while ASP.NET Core is sending a static file to a client. In that case, ASP.NET Core may start streaming bytes to the client immediately for performance reasons. When that happens, the error-handling middleware won’t be able to run, as it can’t reset the response. Generally speaking, you can’t do much about this problem, but it’s something to be aware of.
 
@@ -749,30 +749,30 @@ NOTE I discuss how to add this functionality with minimal APIs in chapter 5 and 
 
 That brings us to the end of middleware in ASP.NET Core for now. You’ve seen how to use and compose middleware to form a pipeline, as well as how to handle exceptions in your application. This information will get you a long way when you start building your first ASP.NET Core applications. Later, you’ll learn how to build your own custom middleware, as well as how to perform complex operations on the middleware pipeline, such as forking it in response to specific requests. In chapter 5, you’ll look in depth at minimal APIs and at how they can be used to build JSON APIs.
 
-Summary
-Middleware has a similar role to HTTP modules and handlers in ASP.NET but is easier to reason about.
+__Summary__
+- Middleware has a similar role to HTTP modules and handlers in ASP.NET but is easier to reason about.
 
-Middleware is composed in a pipeline, with the output of one middleware passing to the input of the next.
+- Middleware is composed in a pipeline, with the output of one middleware passing to the input of the next.
 
-The middleware pipeline is two-way: requests pass through each middleware on the way in, and responses pass back through in reverse order on the way out.
+- The middleware pipeline is two-way: requests pass through each middleware on the way in, and responses pass back through in reverse order on the way out.
 
-Middleware can short-circuit the pipeline by handling a request and returning a response, or it can pass the request on to the next middleware in the pipeline.
+- Middleware can short-circuit the pipeline by handling a request and returning a response, or it can pass the request on to the next middleware in the pipeline.
 
-Middleware can modify a request by adding data to or changing the HttpContext object.
+- Middleware can modify a request by adding data to or changing the HttpContext object.
 
-If an earlier middleware short-circuits the pipeline, not all middleware will execute for all requests.
+- If an earlier middleware short-circuits the pipeline, not all middleware will execute for all requests.
 
-If a request isn’t handled, the middleware pipeline returns a 404 status code.
+- If a request isn’t handled, the middleware pipeline returns a 404 status code.
 
-The order in which middleware is added to WebApplication defines the order in which middleware will execute in the pipeline.
+- The order in which middleware is added to WebApplication defines the order in which middleware will execute in the pipeline.
 
-The middleware pipeline can be reexecuted as long as a response’s headers haven’t been sent.
+- The middleware pipeline can be reexecuted as long as a response’s headers haven’t been sent.
 
-When it’s added to a middleware pipeline, StaticFileMiddleware serves any requested files found in the wwwroot folder of your application.
+- When it’s added to a middleware pipeline, StaticFileMiddleware serves any requested files found in the wwwroot folder of your application.
 
-DeveloperExceptionPageMiddleware provides a lot of information about errors during development, but it should never be used in production.
+- DeveloperExceptionPageMiddleware provides a lot of information about errors during development, but it should never be used in production.
 
-ExceptionHandlerMiddleware lets you provide user-friendly custom error-handling messages when an exception occurs in the pipeline. It’s safe for use in production, as it doesn’t expose sensitive details about your application.
+- ExceptionHandlerMiddleware lets you provide user-friendly custom error-handling messages when an exception occurs in the pipeline. It’s safe for use in production, as it doesn’t expose sensitive details about your application.
 
 Microsoft provides some common middleware, and many third-party options are available on NuGet and GitHub.
 
@@ -780,4 +780,4 @@ Microsoft provides some common middleware, and many third-party options are avai
 
 2. The downside to this approach is that it can hide exactly which middleware is being added to the pipeline. When the answer isn’t clear, I typically search for the source code of the extension method directly in GitHub (https://github.com/aspnet/aspnetcore).
 
-3. C# 8.0 introduced non-nullable reference types, which provide a way to handle null values more clearly, with the promise of finally ridding .NET of NullReferenceExceptions! The ASP.NET Core framework libraries in .NET 7 have fully embraced nullable reference types. See the documentation to learn more: http:// mng.bz/7V0g.
+3. C# 8.0 introduced non-nullable reference types, which provide a way to handle null values more clearly, with the promise of finally ridding .NET of NullReferenceExceptions! The ASP.NET Core framework libraries in .NET 7 have fully embraced nullable reference types. See the documentation to learn more: (https://learn.microsoft.com/en-us/dotnet/csharp/tutorials/nullable-reference-types).
