@@ -1,31 +1,22 @@
-﻿var builder = WebApplication.CreateBuilder(args);
-var app = builder.Build();
+﻿//Listing 5.1 A minimal API that uses a value from the URL
+using System.Xml.Linq;
+using System;
 
-//app.UseExceptionHandler("/error");
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+WebApplication app = builder.Build();
 
-// normally this would only be used in Production, and you'd rely on the DeveloperExceptionPage middleware
-// that's automatically added by WebApplication in Development
-// e.g.:
-if (app.Environment.IsDevelopment())
-
-{
-    app.UseDeveloperExceptionPage();
-}
-else
-{
-    app.UseExceptionHandler("/Error");
-}
-
-app.MapGet("/", () => BadService.GetValues());
-app.MapGet("/error", () => "Sorry, there was a problem processing your request");
-
+var people = new List<Person>                             
+{                                                         
+    new("Tom", "Hanks"),                                  
+    new("Denzel", "Washington"),                          
+    new("Leondardo", "DiCaprio"),                         
+    new("Al", "Pacino"),                                  
+    new("Morgan", "Freeman"),                             
+};                                                        
+ 
+app.MapGet("/person/{name}", (string name) =>             
+    people.Where(p => p.FirstName.StartsWith(name)));     
+ 
 app.Run();
 
-class BadService
-{
-    public static string? GetValues()
-    {
-        throw new Exception("Oops, something bad happened!");
-        //return "hey hooman";
-    }
-}
+public record Person(string FirstName, string LastName);
