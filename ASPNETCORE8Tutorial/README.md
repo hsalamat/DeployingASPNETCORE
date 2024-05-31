@@ -838,7 +838,7 @@ __NOTE__ Although there’s been an industry shift toward client-side frameworks
 
 Having said that, whether to use HTTP APIs in your application isn’t something you necessarily have to worry about ahead of time. You can always add them to an ASP.NET Core app later in development, as the need arises.
 
-SPAs with ASP.NET Core
+### SPAs with ASP.NET Core
 
 The cross-platform, lightweight design of ASP.NET Core means that it lends itself well to acting as a backend for your SPA framework of choice. Given the focus of this book and the broad scope of SPAs in general, I won’t be looking at Angular, React, or other SPAs here. Instead, I suggest checking out the resources appropriate to your chosen SPA. Books are available from Manning for all the common client-side JavaScript frameworks, as well as Blazor:
 
@@ -852,24 +852,31 @@ Blazor in Action, by Chris Sainty (Manning, 2022)
 
 After you’ve established that you need an HTTP API for your application, creating one is easy, as it’s the default application type in ASP.NET Core! In the next section we look at various ways you can create minimal API endpoints and ways to handle multiple HTTP verbs.
 
-5.2 Defining minimal API endpoints
+### 5.2 Defining minimal API endpoints
 Chapters 3 and 4 gave you an introduction to basic minimal API endpoints. In this section, we’ll build on those basic apps to show how you can handle multiple HTTP verbs and explore various ways to write your endpoint handlers.
 
-5.2.1 Extracting values from the URL with routing
+### 5.2.1 Extracting values from the URL with routing
 You’ve seen several minimal API applications in this book, but so far, all the examples have used fixed paths to define the APIs, as in this example:
 
+```
 app.MapGet("/", () => "Hello World!");
-app.MapGet("/person", () => new Person("Andrew", "Lock");
+app.MapGet("/person", () => new Person("Hooman", "Salamat");
+```
+
+
 These two APIs correspond to the paths / and /person, respectively. This basic functionality is useful, but typically you need some of your APIs to be more dynamic. It’s unlikely, for example, that the /person API would be useful in practice, as it always returns the same Person object. What might be more useful is an API to which you can provide the user’s first name, and the API returns all the users with that name.
 
 You can achieve this goal by using parameterized routes for your API definitions. You can create a parameter in a minimal API route using the expression {someValue}, where someValue is any name you choose. The value will be extracted from the request URL’s path and can be used in the lambda function endpoint.
 
-NOTE I introduce only the basics of extracting values from routes in this chapter. You’ll learn a lot more about routing in chapter 6, including why we use routing and how it fits into the ASP.NET Core pipeline, as well as the syntax you can use.
+__NOTE__ I introduce only the basics of extracting values from routes in this chapter. You’ll learn a lot more about routing in chapter 6, including why we use routing and how it fits into the ASP.NET Core pipeline, as well as the syntax you can use.
 
 If you create an API using the route template /person/{name}, for example, and send a request to the path /person/Andrew, the name parameter will have the value "Andrew". You can use this feature to build more useful APIs, such as the one shown in the following listing.
 
 Listing 5.1 A minimal API that uses a value from the URL
 
+```
+using System.Xml.Linq;
+using System;
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 WebApplication app = builder.Build();
  
@@ -886,6 +893,9 @@ app.MapGet("/person/{name}", (string name) =>             ❷
     people.Where(p => p.FirstName.StartsWith(name)));     ❸
  
 app.Run();
+public record Person(string FirstName, string LastName);
+```
+
 ❶ Creates a list of people as the data for the API
 
 ❷ The route is parameterized to extract the name from the URL.
@@ -904,75 +914,21 @@ So far in this book we’ve defined all our minimal API endpoints by using the M
 
 You should use GET only to get data from the server, however. You should never use it to send data or to change data on the server. Instead, you should use an HTTP verb such as POST or DELETE. You generally can’t use these verbs by navigating web pages in the browser, but they’re easy to send from a client-side SPA or mobile app.
 
-TIP If you’re new to web programming or are looking for a refresher, Mozilla Developer Network (MDN), maker of the Firefox web browser, has a good introduction to HTTP at http://mng.bz/KeMK.
+__TIP__ If you’re new to web programming or are looking for a refresher, Mozilla Developer Network (MDN), maker of the Firefox web browser, has a good introduction to HTTP at https://developer.mozilla.org/en-US/docs/Web/HTTP/Overview.
 
 In theory, each of the HTTP verbs has a well-defined purpose, but in practice, you may see apps that only ever use POST and GET. This is often fine for server-rendered applications like Razor Pages, as it’s typically simpler, but if you’re creating an API, I recommend that you use the HTTP verbs with the appropriate semantics wherever possible.
 
 You can define endpoints for other verbs with minimal APIs by using the appropriate Map* functions. To map a POST endpoint, for example, you’d use MapPost(). Table 5.1 shows the minimal API Map* methods available, the corresponding HTTP verbs, and the typical semantic expectations of each verb on the types of operations that the API performs.
 
-Table 5.1 The minimal API map endpoints and the corresponding HTML verbs
-
-Method
-
-HTTP verb
-
-Expected operation
-
-MapGet(path, handler)
-
-GET
-
-Fetch data only; no modification of state. May be safe to cache.
-
-MapPost(path, handler)
-
-POST
-
-Create a new resource.
-
-MapPut(path, handler)
-
-PUT
-
-Create or replace an existing resource.
-
-MapDelete(path, handler)
-
-DELETE
-
-Delete the given resource.
-
-MapPatch(path, handler)
-
-PATCH
-
-Modify the given resource.
-
-MapMethods(path, methods, handler)
-
-Multiple verbs
-
-Multiple operations.
-
-Map(path, handler)
-
-All verbs
-
-Multiple operations.
-
-MapFallback(handler)
-
-All verbs
-
-Useful for SPA fallback routes.
+![Table 5.1](/ASPNETCORE8Tutorial/images/Table5_1.png?raw=true "Table 5.1 The minimal API map endpoints and the corresponding HTML verbs")
 
 RESTful applications (as described in chapter 2) typically stick close to these verb uses where possible, but some of the actual implementations can differ, and people can easily get caught up in pedantry. Generally, if you stick to the expected operations described in table 5.1, you’ll create a more understandable interface for consumers of the API.
 
-NOTE You may notice that if you use the MapMethods() and Map() methods listed in table 5.1, your API probably doesn’t correspond to the expected operations of the HTTP verbs it supports, so I avoid these methods where possible. MapFallback() doesn’t have a path and is called only if no other endpoint matches. Fallback routes can be useful when you have a SPA that uses client-side routing. See http://mng.bz/9DMl for a description of the problem and an alternative solution.
+__NOTE__ You may notice that if you use the MapMethods() and Map() methods listed in table 5.1, your API probably doesn’t correspond to the expected operations of the HTTP verbs it supports, so I avoid these methods where possible. MapFallback() doesn’t have a path and is called only if no other endpoint matches. Fallback routes can be useful when you have a SPA that uses client-side routing. See https://weblog.west-wind.com/posts/2020/Jul/12/Handling-SPA-Fallback-Paths-in-a-Generic-ASPNET-Core-Server for a description of the problem and an alternative solution.
 
 As I mentioned at the start of section 5.2.2, testing APIs that use verbs other than GET is tricky in the browser. You need to use a tool that allows sending arbitrary requests such as Postman (https://www.postman.com) or the HTTP Client plugin in JetBrains Rider. In chapter 11 you’ll learn how to use a tool called Swagger UI to visualize and test your APIs.
 
-TIP The HTTP client plugin in JetBrains Rider makes it easy to craft HTTP requests from inside your API, and even discovers all the endpoints in your application automatically, making them easier to test. You can read more about it at https://www.jetbrains.com/help/rider/Http_client_in__product__ code_editor.html.
+__TIP__ The HTTP client plugin in JetBrains Rider makes it easy to craft HTTP requests from inside your API, and even discovers all the endpoints in your application automatically, making them easier to test. You can read more about it at https://www.jetbrains.com/help/rider/Http_client_in__product__ code_editor.html.
 
 As a final note before we move on, it’s worth mentioning the behavior you get when you call a method with the wrong HTTP verb. If you define an API like the one in listing 5.1
 
@@ -980,67 +936,131 @@ app.MapGet("/person/{name}", (string name) =>
   people.Where(p => p.FirstName.StartsWith(name)));
 and call it by using a POST request to /person/Al instead of a GET request, the handler won’t run, and the response you get will have status code 405 Method Not Allowed.
 
-TIP You should never see this response when you’re calling the API correctly, so if you receive a 405 response, make sure to check that you’re using the right HTTP verb and the right path. Often when I see a 405, I’ve used the correct verb but made a typo in the URL!
+__TIP__ You should never see this response when you’re calling the API correctly, so if you receive a 405 response, make sure to check that you’re using the right HTTP verb and the right path. Often when I see a 405, I’ve used the correct verb but made a typo in the URL!
 
 In all the examples in this book so far, you provide a lambda function as the handler for an endpoint. But in section 5.2.3, you’ll see that there are many ways to define the handler.
 
-5.2.3 Defining route handlers with functions
+### 5.2.3 Defining route handlers with functions
 For basic examples, using a lambda function as the handler for an endpoint is often the simplest approach, but you can take many approaches, as shown in the following listing. This listing also demonstrates creating a simple CRUD (Create, Read, Update, Delete) API using different HTTP verbs, as discussed in section 5.2.1.
 
 Listing 5.2 Creating route handlers for a simple CRUD API
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 WebApplication app = builder.Build();
- 
-app.MapGet("/fruit", () => Fruit.All);                          ❶
- 
-var getFruit = (string id) => Fruit.All[id];                    ❷
-app.MapGet("/fruit/{id}", getFruit);                            ❷
- 
-app.MapPost("/fruit/{id}", Handlers.AddFruit);                  ❸
- 
-Handlers handlers = new();                                      ❹
-app.MapPut("/fruit/{id}", handlers.ReplaceFruit);               ❹
- 
-app.MapDelete("/fruit/{id}", DeleteFruit);                      ❺
- 
+
+app.MapGet("/fruit", () => Fruit.All);
+
+var getFruit = (string id) => Fruit.All[id];
+app.MapGet("/fruit/{id}", getFruit);
+
+app.MapPost("/fruit/{id}", Handlers.AddFruit);
+
+Handlers handlers = new();
+app.MapPut("/fruit/{id}", handlers.ReplaceFruit);
+
+Handlers handlers2 = new();
+app.MapPatch("/fruit/{id}", handlers2.ReplaceFruit);
+
+app.MapDelete("/fruit/{id}", DeleteFruit);
+
 app.Run();
- 
-void DeleteFruit(string id)                                     ❺
+
+void DeleteFruit(string id)
 {
     Fruit.All.Remove(id);
 }
- 
+
 record Fruit(string Name, int Stock)
 {
     public static readonly Dictionary<string, Fruit> All = new();
 };
- 
+
 class Handlers
 {
-    public void ReplaceFruit(string id, Fruit fruit)            ❻
+    public void ReplaceFruit(string id, Fruit fruit)
     {
         Fruit.All[id] = fruit;
     }
- 
-    public static void AddFruit(string id, Fruit fruit)         ❼
+
+    public static void AddFruit(string id, Fruit fruit)
     {
         Fruit.All.Add(id, fruit);
     }
 }
-❶ Lambda expressions are the simplest but least descriptive way to create a handler.
 
-❷ Storing the lambda expression as a variable means you can name it—getFruit in this case.
+Exercise: 
+1. Run the application
+2. Go to postman
+3. select "Post" verb
+4. https://localhost:7178/fruit/f1
+5. in the body: {"Name": "Apple", "Stock" : "45"}
+6. Hit "Send"
+7. select "Post" verb
+8. https://localhost:7178/fruit/f2
+9. in the body: {"Name": "Orange", "Stock" : "35"}
+10. Hit "Send"
+11. Select "Get" verb
+12. https://localhost:7178/fruit/
+13. {
+    "f1": {
+        "name": "Apple",
+        "stock": 45
+    },
+    "f2": {
+        "name": "Orange",
+        "stock": 35
+    }
+}
 
-❸ Handlers can be static methods in any class.
-
-❹ Handlers can also be instance methods.
-
-❺ You can also use local functions, introduced in C# 7.0, as handler methods.
-
-❻ Handlers can also be instance methods.
-
-❼ Converts the response to a JsonObject
+14. Select "Put" verb (if put doesn't find the key, it adds one!)
+15. https://localhost:7178/fruit/fruit2
+16. in the body: {"Name": "banana", "Stock" : "25"}
+17. Select "Get" verb
+18. https://localhost:7178/fruit/
+19. {
+    "f1": {
+        "name": "Apple",
+        "stock": 45
+    },
+    "f2": {
+        "name": "Orange",
+        "stock": 35
+    },
+    "fruit2": {
+        "name": "banana",
+        "stock": 25
+    }
+}
+20. select "Delete" verb
+21. https://localhost:7178/fruit/fruit2
+22. Select "Get" verb
+23. https://localhost:7178/fruit/ 
+24. select "Put" verb
+25. https://localhost:7178/fruit/f2
+26. {"Name": "banana", "Stock" : "25"}
+27. Select "Get" verb
+28. https://localhost:7178/fruit/
+29. {
+    "f1": {
+        "name": "Apple",
+        "stock": 45
+    },
+    "f2": {
+        "name": "banana",
+        "stock": 25
+    }
+}
+30. Select "Patch" verb (partial change)
+31. https://localhost:7178/fruit/f1
+32. {"Name": "Apple2"}
+33. Select "Get" verb
+34. https://localhost:7178/fruit/
+35. {
+    "f1": {
+        "name": "Apple2",
+        "stock": 0
+    }
+}
 
 Listing 5.2 demonstrates the various ways you can pass handlers to an endpoint by simulating a simple API for interacting with a collection of Fruit items:
 
@@ -1058,7 +1078,7 @@ All these approaches are functionally identical, so you can use whichever patter
 
 Each Fruit record in listing 5.2 has a Name and a Stock level and is stored in a dictionary with an id. You call the API by using different HTTP verbs to perform the CRUD operations against the dictionary.
 
-WARNING This API is simple. It isn’t thread-safe, doesn’t validate user input, and doesn’t handle edge cases. We’ll remedy some of those deficiencies in section 5.3.
+__WARNING__ This API is simple. It isn’t thread-safe, doesn’t validate user input, and doesn’t handle edge cases. We’ll remedy some of those deficiencies in section 5.3.
 
 The handlers for the POST and PUT endpoints in listing 5.2 accept both an id parameter and a Fruit parameter, showing another important feature of minimal APIs. Complex types—that is, types that can’t be extracted from the URL by means of route parameters—are created by deserializing the JSON body of a request.
 
@@ -1066,9 +1086,7 @@ NOTE By contrast with APIs built using ASP.NET and ASP.NET Core web API controll
 
 Figure 5.3 shows an example of a POST request sent with Postman. Postman sends the request body as JSON, which the minimal API automatically deserializes into a Fruit instance before calling the endpoint handler. You can bind only a single object in your endpoint handler to the request body in this way. I cover model binding in detail in chapter 7.
 
-CH05_F03_Lock3
-
-Figure 5.3 Sending a POST request with Postman. The minimal API automatically deserializes the JSON in the request body to a Fruit instance before calling the endpoint handler.
+![Figure 5.3](/ASPNETCORE8Tutorial/images/Figure5_3.png?raw=true "Figure 5.3 Sending a POST request with Postman. The minimal API automatically deserializes the JSON in the request body to a Fruit instance before calling the endpoint handler.")
 
 Minimal APIs leave you free to organize your endpoints any way you choose. That flexibility is often cited as a reason to not use them, due to the fear that developers will keep all the functionality in a single file, as in most examples (such as listing 5.2). In practice, you’ll likely want to extract your endpoints to separate files so as to modularize them and make them easier to understand. Embrace that urge; that’s the way they were intended to be used!
 

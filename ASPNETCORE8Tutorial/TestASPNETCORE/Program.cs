@@ -1,22 +1,43 @@
-﻿//Listing 5.1 A minimal API that uses a value from the URL
-using System.Xml.Linq;
-using System;
-
+﻿//Listing 5.2 Creating route handlers for a simple CRUD API
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 WebApplication app = builder.Build();
 
-var people = new List<Person>                             
-{                                                         
-    new("Tom", "Hanks"),                                  
-    new("Denzel", "Washington"),                          
-    new("Leondardo", "DiCaprio"),                         
-    new("Al", "Pacino"),                                  
-    new("Morgan", "Freeman"),                             
-};                                                        
- 
-app.MapGet("/person/{name}", (string name) =>             
-    people.Where(p => p.FirstName.StartsWith(name)));     
- 
+app.MapGet("/fruit", () => Fruit.All);
+
+var getFruit = (string id) => Fruit.All[id];
+app.MapGet("/fruit/{id}", getFruit);
+
+app.MapPost("/fruit/{id}", Handlers.AddFruit);
+
+Handlers handlers = new();
+app.MapPut("/fruit/{id}", handlers.ReplaceFruit);
+
+Handlers handlers2 = new();
+app.MapPatch("/fruit/{id}", handlers2.ReplaceFruit);
+
+app.MapDelete("/fruit/{id}", DeleteFruit);
+
 app.Run();
 
-public record Person(string FirstName, string LastName);
+void DeleteFruit(string id)
+{
+    Fruit.All.Remove(id);
+}
+
+record Fruit(string Name, int Stock)
+{
+    public static readonly Dictionary<string, Fruit> All = new();
+};
+
+class Handlers
+{
+    public void ReplaceFruit(string id, Fruit fruit)
+    {
+        Fruit.All[id] = fruit;
+    }
+
+    public static void AddFruit(string id, Fruit fruit)
+    {
+        Fruit.All.Add(id, fruit);
+    }
+}
