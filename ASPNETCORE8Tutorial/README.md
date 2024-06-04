@@ -1092,14 +1092,12 @@ Minimal APIs leave you free to organize your endpoints any way you choose. That 
 
 Now you have a simple API, but if you try it out, you’ll quickly run into scenarios in which your API seems to break. In section 5.3 you learn how to handle some of these scenarios by returning status codes.
 
-5.3 Generating responses with IResult
+### 5.3 Generating responses with IResult
 You’ve seen the basics of minimal APIs, but so far, we’ve looked only at the happy path, where you can handle the request successfully and return a response. In this section we look at how to handle bad requests and other errors by returning different status codes from your API.
 
 The API in listing 5.2 works well as long as you perform only operations that are valid for the current state of the application. If you send a GET request to /fruit, for example, you’ll always get a 200 success response, but if you send a GET request to /fruit/f1 before you create a Fruit with the id f1, you’ll get an exception and a 500 Internal Server Error response, as shown in figure 5.4.
 
-CH05_F04_Lock3
-
-Figure 5.4 If you try to retrieve a fruit by using a nonexistent id for the simplistic API in listing 5.2, the endpoint throws an exception. This exception is handled by the DeveloperExceptionPage-Middleware but provides a poor experience.
+![Figure 5.4](/ASPNETCORE8Tutorial/images/Figure5_4.png?raw=true "Figure 5.4 If you try to retrieve a fruit by using a nonexistent id for the simplistic API in listing 5.2, the endpoint throws an exception. This exception is handled by the DeveloperExceptionPage-Middleware but provides a poor experience.")
 
 Throwing an exception whenever a user requests an id that doesn’t exist clearly makes for a poor experience all round. A better approach is to return a status code indicating the problem, such as 404 Not Found or 400 Bad Request. The most declarative way to do this with minimal APIs is to return an IResult instance.
 
@@ -1107,17 +1105,17 @@ All the endpoint handlers you’ve seen so far in this book have returned void, 
 
 In summary, the endpoint middleware handles each return type as follows:
 
-void or Task—The endpoint returns a 200 response with no body.
+- void or Task—The endpoint returns a 200 response with no body.
 
-string or Task<string>—The endpoint returns a 200 response with the string serialized to the body as text/plain.
+- string or Task<string>—The endpoint returns a 200 response with the string serialized to the body as text/plain.
 
-IResult or Task<IResult>—The endpoint executes the IResult.ExecuteAsync method. Depending on the implementation, this type can customize the response, returning any status code.
+- IResult or Task<IResult>—The endpoint executes the IResult.ExecuteAsync method. Depending on the implementation, this type can customize the response, returning any status code.
 
-T or Task<T>—All other types (such as POCO objects) are serialized to JSON and returned in the body of a 200 response as application/json.
+- T or Task<T>—All other types (such as POCO objects) are serialized to JSON and returned in the body of a 200 response as application/json.
 
-The IResult implementations provide much of the flexibility in minimal APIs, as you’ll see in section 5.3.1.
+- The IResult implementations provide much of the flexibility in minimal APIs, as you’ll see in section 5.3.1.
 
-5.3.1 Returning status codes with Results and TypedResults
+### 5.3.1 Returning status codes with Results and TypedResults
 A well-designed API uses status codes to indicate to a client what went wrong when a request failed, as well as potentially provide more descriptive codes when a request is successful. You should anticipate common problems that may occur when clients call your API and return appropriate status codes to indicate the causes to users.
 
 ASP.NET Core exposes the simple static helper types Results and TypedResults in the namespace Microsoft.AspNetCore.Http. You can use these helpers to create a response with common status codes, optionally including a JSON body. Each of the methods on Results and TypedResults returns an implementation of IResult, which the endpoint middleware executes to generate the final response.
@@ -1184,15 +1182,15 @@ record Fruit(string Name, int stock);
 
 Listing 5.3 demonstrates several status codes, some of which you may not be familiar with:
 
-200 OK—The standard successful response. It often includes content in the body of the response but doesn’t have to.
+- 200 OK—The standard successful response. It often includes content in the body of the response but doesn’t have to.
 
-201 Created—Often returned when you successfully created an entity on the server. The Created result in listing 5.3 also includes a Location header to describe the URL where the entity can be found, as well as the JSON entity itself in the body of the response.
+- 201 Created—Often returned when you successfully created an entity on the server. The Created result in listing 5.3 also includes a Location header to describe the URL where the entity can be found, as well as the JSON entity itself in the body of the response.
 
-204 No Content—Similar to a 200 response but without any content in the response body.
+- 204 No Content—Similar to a 200 response but without any content in the response body.
 
-400 Bad Request—Indicates that the request was invalid in some way; often used to indicate data validation failures.
+- 400 Bad Request—Indicates that the request was invalid in some way; often used to indicate data validation failures.
 
-404 Not Found—Indicates that the requested entity could not be found.
+- 404 Not Found—Indicates that the requested entity could not be found.
 
 These status codes more accurately describe your API and can make an API easier to use. That said, if you use only 200 OK responses for all your successful responses, few people will mind or think less of you! You can see a summary of all the possible status codes and their expected uses at http://mng.bz/jP4x.
 
