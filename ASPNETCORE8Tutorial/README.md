@@ -1120,7 +1120,7 @@ A well-designed API uses status codes to indicate to a client what went wrong wh
 
 ASP.NET Core exposes the simple static helper types Results and TypedResults in the namespace Microsoft.AspNetCore.Http. You can use these helpers to create a response with common status codes, optionally including a JSON body. Each of the methods on Results and TypedResults returns an implementation of IResult, which the endpoint middleware executes to generate the final response.
 
-NOTE Results and TypedResults perform the same function, as helpers for generating common status codes. The only difference is that the Results methods return an IResult, whereas TypedResults return a concrete generic type, such as Ok<T>. There’s no difference in terms of functionality, but the generic types are easier to use in unit tests and in OpenAPI documentation, as you’ll see in chapters 36 and 11. TypedResults were added in .NET 7.
+__NOTE__ Results and TypedResults perform the same function, as helpers for generating common status codes. The only difference is that the Results methods return an IResult, whereas TypedResults return a concrete generic type, such as Ok<T>. There’s no difference in terms of functionality, but the generic types are easier to use in unit tests and in OpenAPI documentation, as you’ll see in chapters 36 and 11. TypedResults were added in .NET 7.
 
 The following listing shows an updated version of listing 5.2, in which we address some of the deficiencies in the API and use Results and TypedResults to return different status codes to clients.
 
@@ -1192,9 +1192,9 @@ Listing 5.3 demonstrates several status codes, some of which you may not be fami
 
 - 404 Not Found—Indicates that the requested entity could not be found.
 
-These status codes more accurately describe your API and can make an API easier to use. That said, if you use only 200 OK responses for all your successful responses, few people will mind or think less of you! You can see a summary of all the possible status codes and their expected uses at http://mng.bz/jP4x.
+These status codes more accurately describe your API and can make an API easier to use. That said, if you use only 200 OK responses for all your successful responses, few people will mind or think less of you! You can see a summary of all the possible status codes and their expected uses at https://developer.mozilla.org/en-US/docs/Web/HTTP/Status.
 
-NOTE The 404 status code in particular causes endless debate in online forums. Should it be only used if the request didn’t match an endpoint? Is it OK to use 404 to indicate a missing entity (as in the previous example)? There are endless proponents in both camps, so take your pick!
+__NOTE__ The 404 status code in particular causes endless debate in online forums. Should it be only used if the request didn’t match an endpoint? Is it OK to use 404 to indicate a missing entity (as in the previous example)? There are endless proponents in both camps, so take your pick!
 
 Results and TypedResults include methods for all the common status code results you could need, but if you don’t want to use them for some reason, you can always set the status code yourself directly on the HttpResponse, as in listing 5.4. In fact, the listing shows how to define the entire response manually, including the status code, the content type, and the response body. You won’t need to take this manual approach often, but it can be useful in some situations.
 
@@ -1222,10 +1222,10 @@ app.Run();
 
 HttpResponse represents the response that will be sent to the client and is one of the special types that minimal APIs know to inject into your endpoint handlers (instead of trying to create it by deserializing from the request body). You’ll learn about the other types you can use in your endpoint handlers in chapter 7.
 
-5.3.2 Returning useful errors with Problem Details
+### 5.3.2 Returning useful errors with Problem Details
 In the MapPost endpoint of listing 5.3, we checked to see whether an entity with the given id already existed. If it did, we returned a 400 response with a description of the error. The problem with this approach is that the client—typically, a mobile app or SPA—must know how to read and parse that response. If each of your APIs has a different format for errors, that arrangement can make for a confusing API. Luckily, a web standard called Problem Details describes a consistent format to use.
 
-DEFINITION Problem Details is a web specification (https://www.rfc-editor.org/rfc/rfc7807.html) for providing machine-readable errors for HTTP APIs. It defines the required and optional fields that should be in the JSON body for errors.
+__DEFINITION__ Problem Details is a web specification (https://www.rfc-editor.org/rfc/rfc7807.html) for providing machine-readable errors for HTTP APIs. It defines the required and optional fields that should be in the JSON body for errors.
 
 ASP.NET Core includes two helper methods for generating Problem Details responses from minimal APIs: Results.Problem() and Results.ValidationProblem() (plus their TypedResults counterparts). Both of these methods return Problem Details JSON. The only difference is that Problem() defaults to a 500 status code, whereas ValidationProblem() defaults to a 400 status and requires you to pass in a Dictionary of validation errors, as shown in the following listing.
 
@@ -1259,13 +1259,11 @@ app.MapPost("/fruit/{id}", (string id, Fruit fruit) =>
 
 The ProblemHttpResult returned by these methods takes care of including the correct title and description based on the status code, and generates the appropriate JSON, as shown in figure 5.5. You can override the default title and description by passing additional arguments to the Problem() and ValidationProblem() methods.
 
-CH05_F05_Lock3
-
-Figure 5.5 You can return a Problem Details response by using the Problem and ValidationProblem methods. The ValidationProblem response shown here includes a description of the error, along with the validation errors in a standard format. This example shows the response when you try to create a fruit with an id that has already been used.
+![Figure 5.5](/ASPNETCORE8Tutorial/images/Figure5_5.png?raw=true "Figure 5.5  You can return a Problem Details response by using the Problem and ValidationProblem methods. The ValidationProblem response shown here includes a description of the error, along with the validation errors in a standard format. This example shows the response when you try to create a fruit with an id that has already been used.")
 
 Deciding on an error format is an important step whenever you create an API, and as Problem Details is already a web standard, it should be your go-to approach, especially for validation errors. Next, you’ll learn how to ensure that all your error responses are Problem Details.
 
-5.3.3 Converting all your responses to Problem Details
+### 5.3.3 Converting all your responses to Problem Details
 In section 5.3.2 you saw how to use the Results.Problem() and Results.ValidationProblem() methods in your minimal API endpoints to return Problem Details JSON. The only catch is that your minimal API endpoints aren’t the only thing that could generate errors. In this section you’ll learn how to make sure that all your errors return Problem Details JSON, keeping the error responses consistent across your application.
 
 A minimal API application could generate an error response in several ways:
@@ -1291,11 +1289,9 @@ ExceptionHandlerMiddleware invokes this path after it captures an exception to g
 
 Luckily, in .NET 7, you can configure the ExceptionHandlerMiddleware (and DeveloperExceptionPageMiddleware) to convert an exception to a Problem Details response automatically. In .NET 7, you can add the new IProblemDetailsService to your app by calling AddProblemDetails() on WebApplicationBuilder.Services. When the ExceptionHandlerMiddleware is configured without an error-handling path, it automatically uses the IProblemDetailsService to generate the response, as shown in figure 5.6.
 
-WARNING Calling AddProblemDetails() registers the IProblemDetailsService service in the dependency injection container so that other services and middleware can use it. If you configure ExceptionHandlerMiddleware without an error-handling path but forget to call AddProblemDetails(), you’ll get an exception when your app starts. You’ll learn more about dependency injection in chapters 8 and 9.
+__WARNING__ Calling AddProblemDetails() registers the IProblemDetailsService service in the dependency injection container so that other services and middleware can use it. If you configure ExceptionHandlerMiddleware without an error-handling path but forget to call AddProblemDetails(), you’ll get an exception when your app starts. You’ll learn more about dependency injection in chapters 8 and 9.
 
-CH05_F06_Lock3
-
-Figure 5.6 The ExceptionHandlerMiddleware catches exceptions that occur later in the middleware pipeline. If the middleware isn’t configured to reexecute the pipeline, it generates a Problem Details response by using the IProblemDetailsService.
+![Figure 5.6](/ASPNETCORE8Tutorial/images/Figure5_6.png?raw=true "Figure 5.6 The ExceptionHandlerMiddleware catches exceptions that occur later in the middleware pipeline. If the middleware isn’t configured to reexecute the pipeline, it generates a Problem Details response by using the IProblemDetailsService.")
 
 Listing 5.6 shows how to configure Problem Details generation in your exception handlers. Add the required IProblemDetailsService service to your app, and call UseExceptionHandler() without providing an error-handling path, and the middleware will generate a Problem Details response automatically when it catches an exception.
 
@@ -1334,9 +1330,7 @@ Returning error status codes is the common way to communicate errors to a client
 
 Instead of generating a Problem Details response in your endpoint handlers, you can add middleware to convert responses to Problem Details automatically by using the StatusCodePagesMiddleware, as shown in figure 5.7. Any response that reaches the middleware with an error status code and doesn’t already have a body has a Problem Details body added by the middleware. The middleware converts all error responses automatically, regardless of whether they were generated by an endpoint or from other middleware.
 
-CH05_F07_Lock3
-
-Figure 5.7 The StatusCodePagesMiddleware intercepts responses with an error status code that have no response body and adds a Problem Details response body.
+![Figure 5.6](/ASPNETCORE8Tutorial/images/Figure5_6.png?raw=true "Figure 5.7 The StatusCodePagesMiddleware intercepts responses with an error status code that have no response body and adds a Problem Details response body.")
 
 NOTE You can also use the StatusCodePagesMiddleware to reexecute the middleware pipeline with an error handling path, as you can with the ExceptionHandlerMiddleware (chapter 4). This technique is most useful for Razor Pages applications when you want to have a different error page for specific status codes, as you’ll see in chapter 15.
 
@@ -1367,24 +1361,24 @@ app.Run();
 
 The StatusCodePagesMiddleware, coupled with exception-handling middleware, ensures that your API returns a Problem Details response for all error responses.
 
-TIP You can also customize how the Problem Details response is generated by passing parameters to the AddProblemDetails() method or by implementing your own IProblemDetailsService.
+__TIP__ You can also customize how the Problem Details response is generated by passing parameters to the AddProblemDetails() method or by implementing your own IProblemDetailsService.
 
 So far in section 5.3, I’ve described returning objects as JSON, returning a string as text, and returning custom status codes and Problem Details by using Results. Sometimes, however, you need to return something bigger, such as a file or a binary. Luckily, you can use the convenient Results class for that task too.
 
 5.3.4 Returning other data types
 The methods on Results and TypedResults are convenient ways of returning common responses, so it’s only natural that they include helpers for other common scenarios, such as returning a file or binary data:
 
-Results.File()—Pass in the path of the file to return, and ASP.NET Core takes care of streaming it to the client.
+- Results.File()—Pass in the path of the file to return, and ASP.NET Core takes care of streaming it to the client.
 
-Results.Byte()—For returning binary data, you can pass this method a byte[] to return.
+- Results.Byte()—For returning binary data, you can pass this method a byte[] to return.
 
-Results.Stream()—You can send data to the client asynchronously by using a Stream.
+- Results.Stream()—You can send data to the client asynchronously by using a Stream.
 
 In each of these cases, you can provide a content type for the data, and a filename to be used by the client. Browsers offer to save binary data files using the suggested filename. The File and Byte methods even support range requests by specifying enableRangeProcessing as true.
 
-DEFINITION Clients can create range requests using the Range header to request a specific range of bytes from the server instead of the whole file, reducing the bandwidth required for a request. When range requests are enabled for Results.File() or Results.Byte(), ASP.NET Core automatically handles generating an appropriate response. You can read more about range requests at http://mng.bz/Wzd0.
+__DEFINITION__ Clients can create range requests using the Range header to request a specific range of bytes from the server instead of the whole file, reducing the bandwidth required for a request. When range requests are enabled for Results.File() or Results.Byte(), ASP.NET Core automatically handles generating an appropriate response. You can read more about range requests at https://developer.mozilla.org/en-US/docs/Web/HTTP/Range_requests.
 
-If the built-in Results helpers don’t provide the functionality you need, you can always fall back to creating a response manually, as in listing 5.4. If you find yourself creating the same manual response several times, you could consider creating a custom IResult type to encapsulate this logic. I show how to create a custom IResult that returns XML and registers it as an extension in this blog post: http://mng.bz/8rNP.
+If the built-in Results helpers don’t provide the functionality you need, you can always fall back to creating a response manually, as in listing 5.4. If you find yourself creating the same manual response several times, you could consider creating a custom IResult type to encapsulate this logic. I show how to create a custom IResult that returns XML and registers it as an extension in this blog post: https://andrewlock.net/returning-xml-from-minimal-apis-in-dotnet-6/.
 
 5.4 Running common code with endpoint filters
 In section 5.3 you learned how to use Results to return different responses when the request isn’t valid. We’ll look at validation in more detail in chapter 7, but in this section, you’ll learn how to use filters to extract common code that executes before (or after) an endpoint executes.

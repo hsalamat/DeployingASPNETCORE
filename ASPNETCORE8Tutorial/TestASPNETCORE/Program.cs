@@ -1,17 +1,29 @@
 ﻿using System.Collections.Concurrent;
-using System.Net.Mime;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+builder.Services.AddProblemDetails(); // Add the IProblemDetailsService
+
 WebApplication app = builder.Build();
 
+// Configure exception and error handlers
+// Normally you would only enable this in Production
+// But for demonstration purposes this is enabled in all environments
+// if(!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler();
+}
+app.UseStatusCodePages();
+
 var _fruit = new ConcurrentDictionary<string, Fruit>();
+
+app.MapGet("/", void () => throw new Exception("Demonstrating automatic ProblemDetails"));
 
 app.MapGet("/fruit", () => _fruit);
 
 app.MapGet("/fruit/{id}", (string id) =>
     _fruit.TryGetValue(id, out var fruit)
         ? TypedResults.Ok(fruit)
-        : Results.Problem(statusCode: 404));
+        : Results.NotFound()); // standard error converted to ProblemDetails
 
 app.MapPost("/fruit/{id}", (string id, Fruit fruit) =>
     _fruit.TryAdd(id, fruit)
@@ -31,13 +43,6 @@ app.MapDelete("/fruit/{id}", (string id) =>
 {
     _fruit.TryRemove(id, out _);
     return Results.NoContent();
-});
-
-app.MapGet("/teapot", (HttpResponse response) =>
-{
-    response.StatusCode = 418;
-    response.ContentType = MediaTypeNames.Text.Plain;
-    return response.WriteAsync("I'm a teapot!");
 });
 
 app.Run();
