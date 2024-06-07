@@ -1413,17 +1413,15 @@ app.Run()
 
 Even though this check is basic, it starts to clutter our endpoint handler, making it harder to read what the endpoint is doing. One improvement would be to move the validation code to a helper function. But you’re still inevitably going to clutter your endpoint handlers with calls to methods that are tangential to the main function of your endpoint.
 
-NOTE Chapter 7 discusses additional validation patterns in detail.
+__NOTE__ Chapter 7 discusses additional validation patterns in detail.
 
 It’s common to perform various cross-cutting activities for every endpoint. I’ve already mentioned validation; other cross-cutting activities include logging, authorization, and auditing. ASP.NET Core has built-in support for some of these features, such as authorization (chapter 24), but you’re likely to have some common code that doesn’t fit into the specific pigeonholes of validation or authorization.
 
 Luckily, ASP.NET Core includes a feature in minimal APIs for running these tangential concerns: endpoint filters. You can specify a filter for an endpoint by calling AddEndpointFilter()on the result of a call to MapGet (or similar) and passing in a function to execute. You can even add multiple calls to AddEndpointFilter(), which builds up an endpoint filter pipeline, analogous to the middleware pipeline. Figure 5.8 shows that the pipeline is functionally identical to the middleware pipeline in figure 4.3.
 
-CH05_F08_Lock3
+![Figure 5.8](/ASPNETCORE8Tutorial/images/Figure5_8.png?raw=true "Figure 5.8 The endpoint filter pipeline. Filters execute code and then call next(context) to invoke the next filter in the pipeline. If there are no more filters in the pipeline, the endpoint handler is invoked. After the handler has executed, the filters may run further code.")
 
-Figure 5.8 The endpoint filter pipeline. Filters execute code and then call next(context) to invoke the next filter in the pipeline. If there are no more filters in the pipeline, the endpoint handler is invoked. After the handler has executed, the filters may run further code.
-
-Each endpoint filter has two parameters: a context parameter, which provides details about the selected endpoint handler, and the next parameter, which represents the filter pipeline. When you invoke the methodlike next parameter by calling next(context), you invoke the remainder of the filter pipeline. If there are no more filters in the pipeline, you invoke the endpoint handler, as shown in figure 5.8.
+Each endpoint filter has two parameters: a context parameter, which provides details about the selected endpoint handler, and the next parameter, which represents the filter pipeline. When you invoke the method like next parameter by calling next(context), you invoke the remainder of the filter pipeline. If there are no more filters in the pipeline, you invoke the endpoint handler, as shown in figure 5.8.
 
 Listing 5.9 shows how to run the same validation logic you saw in listing 5.8 in an endpoint filter. The filter function accesses the endpoint method arguments by using the context.GetArgument<T>() function, passing in a position; 0 is the first argument of your endpoint handler, 1 is the second argument, and so on. If the argument isn’t valid, the filter function returns an IResult object response. If the argument is valid, the filter calls await next(context) instead, executing the endpoint handler.
 
@@ -1472,7 +1470,7 @@ class ValidationHelper
 
 ❻ Calling next executes the remaining filters in the pipeline.
 
-NOTE The EndpointFilterDelegate is a named delegate type. It’s effectively a Func<EndpointFilterInvocationContext, ValueTask<object?>>.
+__NOTE__ The EndpointFilterDelegate is a named delegate type. It’s effectively a Func<EndpointFilterInvocationContext, ValueTask<object?>>.
 
 There are many parallels between the middleware pipeline and the filter endpoint pipeline, and we’ll explore them in section 5.4.1.
 
