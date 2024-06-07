@@ -1474,12 +1474,12 @@ __NOTE__ The EndpointFilterDelegate is a named delegate type. It’s effectively
 
 There are many parallels between the middleware pipeline and the filter endpoint pipeline, and we’ll explore them in section 5.4.1.
 
-5.4.1 Adding multiple filters to an endpoint
+### 5.4.1 Adding multiple filters to an endpoint
 The middleware pipeline is typically the best place for handling cross-cutting concerns such as logging, authentication, and authorization, as these functions apply to all requests. Nevertheless, it can be common to have additional cross-cutting concerns that are endpoint-specific, as we’ve already discussed. If you need many endpoint-specific operations, you might consider using multiple endpoint filters.
 
 As you saw in figure 5.8, adding multiple filters to an endpoint builds up a pipeline. Like the middleware pipeline, the endpoint filter pipeline can execute code both before and after the rest of the pipeline executes. Similarly, the filter pipeline can short-circuit in the same way as the middleware pipeline by returning a result and not calling next.
 
-NOTE You’ve already seen an example of a short circuit in the filter pipeline. In listing 5.9 we short-circuit the pipeline if the id is invalid by returning a Problem Details object instead of calling next(context).
+__NOTE__ You’ve already seen an example of a short circuit in the filter pipeline. In listing 5.9 we short-circuit the pipeline if the id is invalid by returning a Problem Details object instead of calling next(context).
 
 As with middleware, the order in which you add filters to the endpoint filter pipeline is important. The filters you add first are called first in the pipeline, and filters you add last are called last. On the return journey through the pipeline, after the endpoint handler is invoked, the filters are called in reverse order, as with the middleware pipeline. As an example, consider the following listing, which adds an extra filter to the endpoint shown in listing 5.9.
 
@@ -1519,9 +1519,7 @@ The extra filter is implemented as a lambda function and simply writes a log mes
 
 Figure 5.9 shows the log messages written when we send two requests to the API in listing 5.10. The first request is for an entry that exists, so it returns a 200 OK result. The second request uses an invalid id format, so the first filter rejects it. Figure 5.9 shows that neither the second filter nor the endpoint handler runs in this case; the filter pipeline has been short-circuited.
 
-CH05_F09_Lock3
-
-Figure 5.9 Sending two requests to the API from listing 5.10. The first request is valid, so both filters execute. An invalid id is provided in the second request, so the first filter short-circuits the requests, and the second filter doesn’t execute.
+![Figure 5.9](/ASPNETCORE8Tutorial/images/Figure5_9.png?raw=true "Figure 5.9 Sending two requests to the API from listing 5.10. The first request is valid, so both filters execute. An invalid id is provided in the second request, so the first filter short-circuits the requests, and the second filter doesn’t execute.")
 
 By adding calls to AddEndpointFilter, you can create arbitrarily large endpoint filter pipelines, but the fact that you can doesn’t mean you should. Moving code to filters can reduce clutter in your endpoints, but it makes the flow of your application harder to understand. I suggest that you avoid using filters unless you find duplicated code in multiple endpoints, and then favor a filter over a simple method call only if it significantly simplifies the code required.
 

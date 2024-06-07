@@ -43,18 +43,18 @@ app.MapGet("/fruit", () => _fruit);
 //    });
 
 // API using Helper validation method and additional logging filter
-//app.MapGet("/fruit/{id}", (string id) =>
-//    _fruit.TryGetValue(id, out var fruit)
-//        ? TypedResults.Ok(fruit)
-//        : Results.Problem(statusCode: 404))
-//    .AddEndpointFilter(ValidationHelper.ValidateId)
-//    .AddEndpointFilter(async (context, next) =>
-//    {
-//        app.Logger.LogInformation("Executing filter...");
-//        var result = await next(context);
-//        app.Logger.LogInformation($"Handler result: {result}");
-//        return result;
-//    });
+app.MapGet("/fruit/{id}", (string id) =>
+    _fruit.TryGetValue(id, out var fruit)
+        ? TypedResults.Ok(fruit)
+        : Results.Problem(statusCode: 404))
+    .AddEndpointFilter(ValidationHelper.ValidateId)
+    .AddEndpointFilter(async (context, next) =>
+    {
+        app.Logger.LogInformation("Executing filter...");
+        var result = await next(context);
+        app.Logger.LogInformation($"Handler result: {result}");
+        return result;
+    });
 
 
 // API using filter factory with helper method
@@ -65,11 +65,11 @@ app.MapGet("/fruit", () => _fruit);
 //    .AddEndpointFilterFactory(ValidationHelper.ValidateIdFactory);
 
 // API using IEndpointFilter
-app.MapGet("/fruit/{id}", (string id) =>
-    _fruit.TryGetValue(id, out var fruit)
-        ? TypedResults.Ok(fruit)
-        : Results.Problem(statusCode: 404))
-    .AddEndpointFilter<IdValidationFilter>();
+//app.MapGet("/fruit/{id}", (string id) =>
+//    _fruit.TryGetValue(id, out var fruit)
+//        ? TypedResults.Ok(fruit)
+//        : Results.Problem(statusCode: 404))
+//    .AddEndpointFilter<IdValidationFilter>();
 
 app.MapPost("/fruit/{id}", (Fruit fruit, string id) =>
     _fruit.TryAdd(id, fruit)
